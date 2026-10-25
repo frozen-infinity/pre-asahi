@@ -1,0 +1,22 @@
+{
+  "result": "NOT_ATTEMPTED",
+  "date_utc": null,
+  "target_model": null,
+  "board": null,
+  "macos_build": null,
+  "firmware": null,
+  "boot_mode": null,
+  "reviewed_entry_procedure": null,
+  "logging_transport_host_port_cable": null,
+  "source_lock_path": "sources.lock.json",
+  "artifact_manifest_path": "reports/manifest.json",
+  "final_kernel_config_path": null,
+  "compiler_versions": null,
+  "reviewed_launch_arguments": null,
+  "transcript_path": null,
+  "last_observed_boundary": null,
+  "pid1_marker_observed": false,
+  "cold_start_runs": 0,
+  "return_to_macos_verified": false,
+  "reviewer_notes": null
+}
