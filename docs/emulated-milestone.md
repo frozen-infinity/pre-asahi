@@ -56,3 +56,7 @@ No supported native provisioning procedure was established by this review. These
 ## User steps now
 
 No further commands, package changes or builds are needed for this result. Preserve the existing evidence. Leave the Mac and T7 unchanged while first-entry work is unresolved. The native acceptance criterion remains a real M4 kernel-to-PID1 transcript plus repeatable return to macOS; the emulated result must never be relabelled as that evidence.
+
+## Follow-up: existing native mitigations located
+
+The [deeper native-entry audit](native-provisioning-design.md) found that the pinned m1n1 already appends idle=nop/arm64.nowfxt, reserves the M4+ secondary-core CTRR region and switches to WFE at handoff. The earlier list above identified review requirements, not proven missing implementations. Reuse the existing code; no new mitigation patch is proposed. The user's preference is now to avoid risky target operations, so provisioning and disk changes remain deferred.
