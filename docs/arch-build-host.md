@@ -67,3 +67,34 @@ The last command may print a directory even when its libraries are absent. It al
 ## Validation limits
 
 The guide and Python syntax were checked in the macOS development session. The two existing scaffold tests passed. There is no Arch package transaction, GCC cross compilation or upstream kernel build result from this session. These are the next checks for the user's Arch host. All native boot, firmware compatibility and USB/T7 gates remain open.
+
+## Configuration stop: BLOCK remains enabled
+
+At pinned Linux commit `94fb23346d522edf53722357c426a3e58030beea`,
+[`block/Kconfig`](https://github.com/AsahiLinux/linux/blob/94fb23346d522edf53722357c426a3e58030beea/block/Kconfig) declares `BLOCK` with an `if EXPERT` prompt and `default y`. With EXPERT disabled, the request to disable BLOCK is not user-selectable, so olddefconfig restores BLOCK=y. The initial fragment omitted EXPERT. This was a scaffold configuration error, not a missing compiler or failed kernel compilation.
+
+The fix adds `CONFIG_EXPERT=y` and keeps the existing fail-closed checks for both that requirement and BLOCK=n. EXPERT exposes additional settings; it does not prove the resulting kernel is safe for hardware execution. Review the complete resolved config before any later boot attempt.
+
+To try the fix from an existing clean checkout (retain local changes if git status shows any):
+
+```sh
+git fetch origin
+git switch --track origin/fix-block-config
+python3 -m unittest discover -s tests -v
+```
+
+If you already have this local branch, use `git switch fix-block-config` instead. Keep sources.lock.json and work/src intact; there is no need to fetch new upstream revisions or delete the build directory. The builder regenerates the base configuration before merging the corrected fragment.
+
+Run the retry in Bash:
+
+```sh
+mkdir -p reports
+set -o pipefail
+python3 scripts/bringup.py build-linux --model j713 2>&1 | tee reports/kernel-build-retry.log
+result=$?
+echo "Build exit status: $result"
+```
+
+The merge script's messages about redefining settings are expected. A subsequent STOP is not a successful build: retain the first error. On success, create the artifact manifest as described above. Do not edit work/src/linux or relax the required-config check.
+
+Fix validation: the pinned upstream BLOCK prompt/default was inspected and the two existing scaffold tests passed locally. Full olddefconfig resolution and compilation with this corrected fragment still need the Arch host run; they have not been reproduced in the macOS development session.
