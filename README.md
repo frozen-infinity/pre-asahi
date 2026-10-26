@@ -12,6 +12,10 @@ The existing 16 KiB kernel and diagnostic initramfs passed the user's full-syste
 
 The user wants to avoid risky operations. Target installation, T7 erasure, boot-policy changes and native experiments are deferred. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
 
+## Implementation direction toward a working system
+
+Preserve the tested baseline while evaluating a separately pinned downstream stack with additional j713 platform work. The [working-system path and actual DT compilation results](docs/working-system-path.md) compare Asahi with an Aurora ALARM source candidate and explain the remaining whole-stack qualification. The baseline DTB was reproduced byte-for-byte; the candidate DTB also compiled, but neither its aliases nor its build result prove driver operation. No native install or T7 change is requested. All current hardware-risk constraints remain in force.
+
 ## First milestone
 
 Prepare and validate pinned Asahi m1n1 + Linux artifacts and a tiny RAM-only diagnostic initramfs. The eventual hardware acceptance test is a **native** Linux kernel reaching PID 1 and printing `M4AIR_PHASE1_PID1` on a verified output channel, followed by repeatable return to macOS. A hypervisor result is useful separately, but never counts as native boot proof.

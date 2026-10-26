@@ -1,0 +1,13 @@
+{
+  "asahi-baseline": {
+    "repository": "AsahiLinux/linux",
+    "commit": "94fb23346d522edf53722357c426a3e58030beea",
+    "entry": "arch/arm64/boot/dts/apple/t8132-j713.dts"
+  },
+  "aurora-alarm-candidate": {
+    "repository": "aurora-silicon/linux",
+    "commit": "311471f73e9919764bfb24acfe7eeb7c5230795a",
+    "entry": "arch/arm64/boot/dts/apple/t8132-j713.dts",
+    "provenance": "aurora-silicon/alarm-aurora sources.json at ac3b14d017cb5c316d21a8af3b3e38e40390b388"
+  }
+}
