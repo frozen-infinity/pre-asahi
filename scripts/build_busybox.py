@@ -16,6 +16,21 @@ VERSION = '1.38.0'
 SHA256 = '34f9ea6ff8636f2c9241153b9114eefa9e65674a45318ae1ef95bb5f31c53bb2'
 REQUIRED_APPLETS = {'sh', 'mount', 'uname', 'tr', 'sleep'}
 
+def smoke_capture(args):
+    """Retain the diagnostic text when an emulator/guest check fails."""
+    try:
+        return bringup.run(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           text=True, timeout=30).stdout.strip()
+    except subprocess.CalledProcessError as e:
+        if e.stdout:
+            print(e.stdout.rstrip(), file=sys.stderr, flush=True)
+        raise
+    except subprocess.TimeoutExpired as e:
+        if e.stdout:
+            output = e.stdout.decode(errors='replace') if isinstance(e.stdout, bytes) else e.stdout
+            print(output.rstrip(), file=sys.stderr, flush=True)
+        raise
+
 def checked_members(archive):
     members = archive.getmembers()
     for item in members:
@@ -69,10 +84,10 @@ def build(archive_path):
     data = binary.read_bytes()
     bringup.validate_busybox(data)
     # Explicit QEMU calls only; no binfmt registration and no /init execution.
-    applets = set(bringup.capture(['qemu-aarch64', binary, '--list']).splitlines())
+    applets = set(smoke_capture(['qemu-aarch64', binary, '--list']).splitlines())
     if not REQUIRED_APPLETS <= applets:
         raise ValueError('Missing BusyBox applets: ' + ', '.join(sorted(REQUIRED_APPLETS - applets)))
-    marker = bringup.capture(['qemu-aarch64', binary, 'sh', '-c', 'if [ -r /dev/null ]; then echo BUSYBOX_AARCH64_OK; else exit 1; fi'])
+    marker = smoke_capture(['qemu-aarch64', binary, 'sh', '-c', 'if [ -r /dev/null ]; then echo BUSYBOX_AARCH64_OK; else exit 1; fi'])
     if marker != 'BUSYBOX_AARCH64_OK':
         raise ValueError('BusyBox shell smoke test failed')
     dest = bringup.WORK / 'artifacts'
@@ -95,7 +110,7 @@ def main():
     args = p.parse_args()
     try:
         build(args.archive)
-    except (OSError, ValueError, tarfile.TarError, subprocess.CalledProcessError) as e:
+    except (OSError, ValueError, tarfile.TarError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
         print('STOP: ' + str(e), file=sys.stderr)
         return 1
     return 0

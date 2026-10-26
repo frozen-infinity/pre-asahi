@@ -60,4 +60,26 @@ Do not concatenate payloads, install a boot entry, use recovery commands, or cop
 
 ## Validation of this PR
 
-Downloaded BusyBox 1.38.0 and matched SHA-256 `34f9ea6ff8636f2c9241153b9114eefa9e65674a45318ae1ef95bb5f31c53bb2`. Upstream Kconfig ran locally on macOS with Clang for its host tools, and all nine requested config values resolved correctly. Four Python tests passed, covering ELF gating, cpio structure and rejecting unsafe archive entries. Documented shell blocks passed Bash syntax checks. No AArch64 BusyBox compilation, QEMU userspace test or hardware boot was performed in this macOS session; these are the next Arch-host checks.
+Downloaded BusyBox 1.38.0 and matched SHA-256 `34f9ea6ff8636f2c9241153b9114eefa9e65674a45318ae1ef95bb5f31c53bb2`. Upstream Kconfig ran locally on macOS with Clang for its host tools, and all ten requested config values resolved correctly. Five Python tests passed, covering ELF gating, cpio structure and rejecting unsafe archive entries. Documented shell blocks passed Bash syntax checks. No AArch64 BusyBox compilation, QEMU userspace test or hardware boot was performed in this macOS session; these are the next Arch-host checks.
+
+## Retry after the --list check exits 127
+
+The initial minimal fragment omitted CONFIG_BUSYBOX=y. BusyBox 1.38.0's Config.in explains that this option supplies the listing/help entry point, and appletlib.c conditionally compiles --list support under it. Starting from allnoconfig disabled that entry point even though ordinary applets compiled. The original wrapper hid stderr, so the user's exact guest error text was not retained; this is a confirmed configuration omission consistent with the reported --list exit 127, not evidence of a broken QEMU installation.
+
+The corrected fragment enables CONFIG_BUSYBOX=y. Failed QEMU checks now print their combined output and have a 30-second timeout. A regression test verifies that a subprocess exit 127 retains its diagnostic text. Config resolution was checked locally with the official archive; actual corrected AArch64/QEMU execution remains pending on the Arch host. The ash indentation warning and glibc library-selection messages did not stop compilation in the reported run.
+
+Update the existing PR branch, then rebuild using the cached source archive; no new packages, source download, kernel rebuild or m1n1 rebuild are needed:
+
+```sh
+git status --short
+git fetch origin
+git switch diagnostic-initramfs
+git pull --ff-only origin diagnostic-initramfs
+python3 -m unittest discover -s tests -v
+set -o pipefail
+python3 scripts/build_busybox.py --archive work/downloads/busybox-1.38.0.tar.bz2 2>&1 | tee reports/busybox-build-retry.log
+result=$?
+echo "Build exit status: $result"
+```
+
+Run these in Bash and retain any local changes before pulling. If the retry fails, send the first error including the newly displayed guest/QEMU text. The builder retains a fresh attempt for inspection. Keep the Mac and T7 disconnected.

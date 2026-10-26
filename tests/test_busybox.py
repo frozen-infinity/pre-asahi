@@ -1,4 +1,6 @@
 import io
+import contextlib
+import subprocess
 from pathlib import Path
 import sys
 import tarfile
@@ -30,6 +32,17 @@ class ArchiveTests(unittest.TestCase):
     def test_accepts_expected_regular_source_file(self):
         with self.archive('busybox-1.38.0/Makefile') as archive:
             self.assertEqual(len(bb.checked_members(archive)), 1)
+
+class SmokeDiagnosticsTests(unittest.TestCase):
+    def test_failed_guest_check_prints_its_error(self):
+        errors = io.StringIO()
+        args = [sys.executable, '-c',
+                "import sys; print('busybox: applet not found', file=sys.stderr); sys.exit(127)"]
+        with contextlib.redirect_stderr(errors):
+            with self.assertRaises(subprocess.CalledProcessError) as caught:
+                bb.smoke_capture(args)
+        self.assertEqual(caught.exception.returncode, 127)
+        self.assertIn('busybox: applet not found', errors.getvalue())
 
 if __name__ == '__main__':
     unittest.main()

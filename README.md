@@ -76,3 +76,5 @@ There is deliberately no install, flash, partition, security-policy, or boot com
 ## Diagnostic userspace after the kernel and m1n1 build
 
 Follow [the diagnostic initramfs guide](docs/diagnostic-initramfs.md) to build a hash-pinned minimal static AArch64 BusyBox, run explicit QEMU userspace checks, and package `/init`. This prepares a RAM-only diagnostic artifact; it does not provision a boot entry or prove native boot. The guide includes the exact Arch commands and validation limits.
+
+If the BusyBox QEMU `--list` check exits 127, see [the retry steps](docs/diagnostic-initramfs.md#retry-after-the---list-check-exits-127). The minimal config now enables the listing entry point and failed smoke tests retain their error output.
