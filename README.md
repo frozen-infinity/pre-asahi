@@ -20,6 +20,10 @@ Use the separate T7 for test files and, once supported, the experimental root fi
 
 Read [the T7 plan](docs/t7-testing.md) before any hardware experiment. Current scripts never format disks, install boot components, or modify startup security. A T7 root filesystem can limit later rootfs writes to external media; it does not isolate firmware, boot policy, drivers, or hardware from experimental code.
 
+## Kernel configuration retry
+
+If the build stopped with `Unresolved required config: # CONFIG_BLOCK is not set`, use the [BLOCK configuration fix and retry steps](docs/arch-build-host.md#configuration-stop-block-remains-enabled). The fragment now enables EXPERT so Kconfig can honor BLOCK=n; the required-config checks remain strict.
+
 ## Intel Arch development host
 
 Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross compiler, validate AArch64 object output, and attempt a j713 kernel build. This prepares files on the Intel laptop; no T7 formatting or Mac boot changes are needed. m1n1 Rust target setup is handled separately from the distro Rust installation.
