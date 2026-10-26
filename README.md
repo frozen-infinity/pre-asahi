@@ -8,6 +8,10 @@ Independent experimental scaffold, checked 2026-10-25. This is not an installer,
 
 The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. No further user commands or storage changes are requested now.
 
+## Current native-work scope
+
+The user wants to avoid risky operations. Target installation, T7 erasure, boot-policy changes and native experiments are deferred. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
+
 ## First milestone
 
 Prepare and validate pinned Asahi m1n1 + Linux artifacts and a tiny RAM-only diagnostic initramfs. The eventual hardware acceptance test is a **native** Linux kernel reaching PID 1 and printing `M4AIR_PHASE1_PID1` on a verified output channel, followed by repeatable return to macOS. A hypervisor result is useful separately, but never counts as native boot proof.
