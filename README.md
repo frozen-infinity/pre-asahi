@@ -6,7 +6,7 @@ Independent experimental scaffold, checked 2026-10-25. This is not an installer,
 
 ## Current result: emulated PID 1 passed
 
-The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. No further user commands or storage changes are requested now.
+The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. The next build-only step is described below.
 
 ## Current native-work scope
 
@@ -37,6 +37,19 @@ Read [the T7 plan](docs/t7-testing.md) before any hardware experiment. Current s
 Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross compiler, validate AArch64 object output, and attempt a j713 kernel build. This prepares files on the Intel laptop; no T7 formatting or Mac boot changes are needed. m1n1 Rust target setup is handled separately from the distro Rust installation.
 
 ## Your steps now
+
+The next candidate milestone runs entirely on disposable ARM Linux builders:
+
+1. After merging the candidate build PR, open **Actions → Candidate stack build**.
+2. Choose **Run workflow → main → both**.
+3. Share the run link in chat so we can review the Aura package build and matching
+   kernel configuration results.
+
+Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
+outputs and limits. These new build jobs have not yet run; success will not count
+as native boot proof. Leave the Mac and T7 unchanged for this step.
+
+### Earlier baseline preparation
 
 From macOS Terminal, clone the development branch for this PR (after merging it, clone `main` instead):
 

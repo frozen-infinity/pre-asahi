@@ -1,0 +1,9 @@
+{
+  "packaging_repository": "https://github.com/aurora-silicon/alarm-aurora.git",
+  "packaging_commit": "ac3b14d017cb5c316d21a8af3b3e38e40390b388",
+  "kernel_commit": "311471f73e9919764bfb24acfe7eeb7c5230795a",
+  "aura_commit": "553b566f69275ff4e46ee6542a7236fb80a333a2",
+  "base_sha256": "42a4eeaa038994ffd31fa173256ef2f0ef511358eeb41b9ea1f8626391b9b319",
+  "base_bytes": 829367415,
+  "base_signer": "68B3537F39A313B3E574D06777193F152BDBE6A6"
+}
