@@ -4,6 +4,18 @@ An experimental, AI-assisted project aiming for native Linux support on Apple M4
 
 Independent experimental scaffold, checked 2026-10-25. This is not an installer, an official Arch/Asahi project, or a working desktop port. No hardware boot has been performed.
 
+## Current result: emulated PID 1 passed
+
+The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. The next build-only step is described below.
+
+## Current native-work scope
+
+The user wants to avoid risky operations. Target installation, T7 erasure, boot-policy changes and native experiments are deferred. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
+
+## Implementation direction toward a working system
+
+Preserve the tested baseline while evaluating a separately pinned downstream stack with additional j713 platform work. The [working-system path and actual DT compilation results](docs/working-system-path.md) compare Asahi with an Aurora ALARM source candidate and explain the remaining whole-stack qualification. The baseline DTB was reproduced byte-for-byte; the candidate DTB also compiled, but neither its aliases nor its build result prove driver operation. No native install or T7 change is requested. All current hardware-risk constraints remain in force.
+
 ## First milestone
 
 Prepare and validate pinned Asahi m1n1 + Linux artifacts and a tiny RAM-only diagnostic initramfs. The eventual hardware acceptance test is a **native** Linux kernel reaching PID 1 and printing `M4AIR_PHASE1_PID1` on a verified output channel, followed by repeatable return to macOS. A hypervisor result is useful separately, but never counts as native boot proof.
@@ -19,10 +31,6 @@ Changes are proposed through pull requests to [frozen-infinity/pre-asahi](https:
 Use the separate T7 for test files and, once supported, the experimental root filesystem. **There is no supported external-only M4 Air boot procedure here.** Asahi's documented initial boot setup uses internal storage, and the current M4 support table does not establish a working USB storage path. Phase 1 runs from RAM and does not need a Linux root partition on the T7. Do not erase or repartition the T7 for this milestone.
 
 Read [the T7 plan](docs/t7-testing.md) before any hardware experiment. Current scripts never format disks, install boot components, or modify startup security. A T7 root filesystem can limit later rootfs writes to external media; it does not isolate firmware, boot policy, drivers, or hardware from experimental code.
-
-## Kernel configuration retry
-
-If the build stopped with `Unresolved required config: # CONFIG_BLOCK is not set`, use the [BLOCK configuration fix and retry steps](docs/arch-build-host.md#configuration-stop-block-remains-enabled). The fragment now enables EXPERT so Kconfig can honor BLOCK=n; the required-config checks remain strict.
 
 ## Intel Arch development host
 
@@ -89,3 +97,17 @@ Source checkout/build code executes upstream code on the development host. Revie
 Build prerequisites: Git, GNU make; for m1n1 see its locked README (Rust target `aarch64-unknown-none-softfloat`, LLVM/lld on macOS, dtc/ImageMagick as required). Kernel: Linux host with GCC AArch64 cross compiler, binutils, bc, bison, flex, pkg-config, OpenSSL/ELF development libraries, dtc, Python, gzip. Nothing is installed automatically. `doctor` reports tools, not a guarantee of a complete toolchain. Kernel uses arm64 defconfig plus a checked fragment; this is a diagnostic baseline, not a tuned Asahi distribution config. Review final `.config` and driver dependencies before hardware use.
 
 There is deliberately no install, flash, partition, security-policy, or boot command. See [Phase 1](docs/phase1.md), [upstream audit](docs/upstream.md), and [test report](docs/validation.md). Artifact creation is not boot validation.
+
+## Diagnostic userspace after the kernel and m1n1 build
+
+Follow [the diagnostic initramfs guide](docs/diagnostic-initramfs.md) to build a hash-pinned minimal static AArch64 BusyBox, run explicit QEMU userspace checks, and package `/init`. This prepares a RAM-only diagnostic artifact; it does not provision a boot entry or prove native boot. The guide includes the exact Arch commands and validation limits.
+
+If the BusyBox QEMU `--list` check exits 127, see [the retry steps](docs/diagnostic-initramfs.md#retry-after-the---list-check-exits-127). The minimal config now enables the listing entry point and failed smoke tests retain their error output.
+
+## Build artifacts prepared; first-boot path remains unverified
+
+The user has reported successful kernel/j713 DTB, m1n1 and static BusyBox/initramfs builds, including QEMU userspace smoke checks. These complete artifact preparation, not native boot proof. Read [the boot-entry review](docs/boot-gate-review.md) before any hardware action. The next step is a filtered read-only macOS firmware report and confirming whether a boot entry already exists. No installer bypass, disk formatting or startup-security change is proposed.
+
+## Next independent check: emulated kernel-to-PID1 boot
+
+The target Mac has no existing Asahi/m1n1 boot environment. First-time provisioning remains unresolved. On the Intel Arch host, [test the existing kernel and initramfs on QEMU virt](docs/qemu-kernel.md) to exercise 16 KiB kernel/userspace loading. The runner records logs and hashes, attaches no disk/network, and always labels its result as emulation rather than native M4 boot. No kernel rebuild is required.
