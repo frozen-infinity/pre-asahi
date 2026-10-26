@@ -4,6 +4,10 @@ An experimental, AI-assisted project aiming for native Linux support on Apple M4
 
 Independent experimental scaffold, checked 2026-10-25. This is not an installer, an official Arch/Asahi project, or a working desktop port. No hardware boot has been performed.
 
+## Current result: emulated PID 1 passed
+
+The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. No further user commands or storage changes are requested now.
+
 ## First milestone
 
 Prepare and validate pinned Asahi m1n1 + Linux artifacts and a tiny RAM-only diagnostic initramfs. The eventual hardware acceptance test is a **native** Linux kernel reaching PID 1 and printing `M4AIR_PHASE1_PID1` on a verified output channel, followed by repeatable return to macOS. A hypervisor result is useful separately, but never counts as native boot proof.
