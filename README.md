@@ -82,3 +82,7 @@ If the BusyBox QEMU `--list` check exits 127, see [the retry steps](docs/diagnos
 ## Build artifacts prepared; first-boot path remains unverified
 
 The user has reported successful kernel/j713 DTB, m1n1 and static BusyBox/initramfs builds, including QEMU userspace smoke checks. These complete artifact preparation, not native boot proof. Read [the boot-entry review](docs/boot-gate-review.md) before any hardware action. The next step is a filtered read-only macOS firmware report and confirming whether a boot entry already exists. No installer bypass, disk formatting or startup-security change is proposed.
+
+## Next independent check: emulated kernel-to-PID1 boot
+
+The target Mac has no existing Asahi/m1n1 boot environment. First-time provisioning remains unresolved. On the Intel Arch host, [test the existing kernel and initramfs on QEMU virt](docs/qemu-kernel.md) to exercise 16 KiB kernel/userspace loading. The runner records logs and hashes, attaches no disk/network, and always labels its result as emulation rather than native M4 boot. No kernel rebuild is required.
