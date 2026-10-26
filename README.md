@@ -78,3 +78,7 @@ There is deliberately no install, flash, partition, security-policy, or boot com
 Follow [the diagnostic initramfs guide](docs/diagnostic-initramfs.md) to build a hash-pinned minimal static AArch64 BusyBox, run explicit QEMU userspace checks, and package `/init`. This prepares a RAM-only diagnostic artifact; it does not provision a boot entry or prove native boot. The guide includes the exact Arch commands and validation limits.
 
 If the BusyBox QEMU `--list` check exits 127, see [the retry steps](docs/diagnostic-initramfs.md#retry-after-the---list-check-exits-127). The minimal config now enables the listing entry point and failed smoke tests retain their error output.
+
+## Build artifacts prepared; first-boot path remains unverified
+
+The user has reported successful kernel/j713 DTB, m1n1 and static BusyBox/initramfs builds, including QEMU userspace smoke checks. These complete artifact preparation, not native boot proof. Read [the boot-entry review](docs/boot-gate-review.md) before any hardware action. The next step is a filtered read-only macOS firmware report and confirming whether a boot entry already exists. No installer bypass, disk formatting or startup-security change is proposed.
