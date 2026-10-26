@@ -72,3 +72,7 @@ Source checkout/build code executes upstream code on the development host. Revie
 Build prerequisites: Git, GNU make; for m1n1 see its locked README (Rust target `aarch64-unknown-none-softfloat`, LLVM/lld on macOS, dtc/ImageMagick as required). Kernel: Linux host with GCC AArch64 cross compiler, binutils, bc, bison, flex, pkg-config, OpenSSL/ELF development libraries, dtc, Python, gzip. Nothing is installed automatically. `doctor` reports tools, not a guarantee of a complete toolchain. Kernel uses arm64 defconfig plus a checked fragment; this is a diagnostic baseline, not a tuned Asahi distribution config. Review final `.config` and driver dependencies before hardware use.
 
 There is deliberately no install, flash, partition, security-policy, or boot command. See [Phase 1](docs/phase1.md), [upstream audit](docs/upstream.md), and [test report](docs/validation.md). Artifact creation is not boot validation.
+
+## Diagnostic userspace after the kernel and m1n1 build
+
+Follow [the diagnostic initramfs guide](docs/diagnostic-initramfs.md) to build a hash-pinned minimal static AArch64 BusyBox, run explicit QEMU userspace checks, and package `/init`. This prepares a RAM-only diagnostic artifact; it does not provision a boot entry or prove native boot. The guide includes the exact Arch commands and validation limits.

@@ -204,7 +204,7 @@ def manifest():
         if parent.exists():
             paths.extend(x for x in parent.rglob('*') if x.is_file() and
                          (x.name in ['Image', 'Image.gz', '.config', 'm1n1.bin', 'm1n1.macho',
-                                     'initramfs.cpio.gz', 'toolchain.json'] or x.suffix == '.dtb'))
+                                     'initramfs.cpio.gz', 'toolchain.json', 'busybox', 'busybox.config', 'busybox-build.json'] or x.suffix == '.dtb'))
     for path in paths:
         h = hashlib.sha256()
         with path.open('rb') as f:
