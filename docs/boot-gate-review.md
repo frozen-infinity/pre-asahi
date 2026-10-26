@@ -18,6 +18,8 @@ The build/packaging portion of Phase 1 is complete on the evidence provided; the
 
 ## Next information, read-only
 
+The helper has now run successfully in the connected macOS environment and reported the expected Mac16,12/M4 model. The allowlisted firmware output was reviewed in the chat, not committed. There is no need to repeat the command unless identifying a different machine or a later firmware state. The remaining user question is whether an Asahi/m1n1 boot entry already exists.
+
 On the Mac's existing pre-asahi clone, retain any local changes before changing branches:
 
 ```sh
@@ -42,4 +44,4 @@ Do not install the current artifacts, concatenate a purported boot image, alter 
 
 ## Validation
 
-Inspected the pinned m1n1 firmware logic/setup module, a recorded installer revision and current upstream docs. The firmware helper's privacy filtering and missing-record behavior are unit tested; the script has not been run on the target Mac. All seven scaffold tests passed locally. No hardware experiment or persistent target change was performed in this review.
+Inspected the pinned m1n1 firmware logic/setup module, a recorded installer revision and current upstream docs. The firmware helper's privacy filtering and missing-record behavior are unit tested; the helper also ran successfully in the connected macOS environment, printing only allowlisted fields. No raw hardware report was saved. All seven scaffold tests passed locally. No hardware experiment or persistent target change was performed in this review.
