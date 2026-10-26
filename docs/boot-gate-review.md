@@ -45,3 +45,7 @@ Do not install the current artifacts, concatenate a purported boot image, alter 
 ## Validation
 
 Inspected the pinned m1n1 firmware logic/setup module, a recorded installer revision and current upstream docs. The firmware helper's privacy filtering and missing-record behavior are unit tested; the helper also ran successfully in the connected macOS environment, printing only allowlisted fields. No raw hardware report was saved. All seven scaffold tests passed locally. No hardware experiment or persistent target change was performed in this review.
+
+## Boot history confirmed
+
+The user confirmed that this Mac has only run macOS and has no existing Linux/Asahi environment to reuse. First-time m1n1 entry/provisioning is therefore unresolved; an existing proxy connection must not be assumed. The next independent development check is [QEMU full-system kernel/initramfs validation](qemu-kernel.md). Passing it does not resolve the first-entry blocker. A pass does not establish readiness for native launch.
