@@ -41,6 +41,11 @@ assuming an enabled U-Boot configuration completes it automatically.
 
 ## Concrete next work
 
+Update: [OS-DTB preparation and a real production-importer probe](prepared-os-dtb.md)
+have now run on the Mac. The static candidate was preserved separately; the
+generic synthetic runtime failed at CPU topology import without mutating the
+destination. The remaining work below must account for that observed mismatch.
+
 Prepare a workspace-only OS-DT handoff candidate that records its kernel source
 identity and explicit buffer contract, preserves the original DTB and validates
 it with the actual production importer. Extend the harness to use the saved OS
