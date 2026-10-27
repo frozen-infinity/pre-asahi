@@ -29,7 +29,11 @@ the saved Apple artifacts and is not an installation configuration.
 
 QEMU executes U-Boot as its generic ARM64 firmware with TCG and 1 GiB RAM. The
 EFI image is preloaded into virtual RAM at `0x44000000`; the helper waits for the
-U-Boot prompt and sends `bootefi 0x44000000` to the emulated serial console.
+U-Boot prompt and sends `bootefi 0x44000000:<hex-byte-count>` to the emulated serial console.
+The explicit length is required because QEMU's RAM preload does not register the
+image with U-Boot's file-loading metadata. An initial CI attempt built/booted
+U-Boot successfully but exposed this address-only harness error; it was corrected
+without changing source pins, the EFI app or the tested board profile.
 There is no disk image, ESP, pflash backing file, physical disk/USB passthrough
 or network. No command is sent to a host terminal or the Mac's bootloader.
 

@@ -55,9 +55,13 @@ def emulate(attempt, firmware, image, qemu):
                     break
                 if process.poll() is not None:
                     break
+                if sent and console.count('=>') >= 2:
+                    status = 'UBOOT_RETURNED_WITHOUT_ACCEPTED_PROBE'
+                    break
                 if not sent and '=>' in console:
                     # A command to the emulated console only; no disk or host terminal involved.
-                    process.stdin.write(b'bootefi 0x44000000\n')
+                    # QEMU's RAM preload does not register U-Boot image metadata: supply the byte count.
+                    process.stdin.write(('bootefi 0x44000000:%x\n' % image.stat().st_size).encode())
                     process.stdin.flush()
                     sent = True
                 time.sleep(0.1)
