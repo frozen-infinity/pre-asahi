@@ -51,6 +51,12 @@ outputs and limits. Aura packaging and kernel preparation passed in
 The full kernel and candidate emulator steps have not yet run; success will not
 count as native boot proof. Leave the Mac and T7 unchanged for this step.
 
+If you ran [the first full-build attempt](https://github.com/frozen-infinity/pre-asahi/actions/runs/40466183118),
+it stopped after preparation with `cd: linux: No such file or directory`.
+Merge the recipe-directory fix, then start a **new** workflow on **main**, component
+**kernel**. Re-running the old run uses its old code. This was a wrapper error;
+full kernel compilation and QEMU did not start.
+
 ### Earlier baseline preparation
 
 From macOS Terminal, clone the development branch for this PR (after merging it, clone `main` instead):

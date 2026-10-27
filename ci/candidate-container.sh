@@ -60,8 +60,13 @@ else
   if [[ $component == kernel ]]; then
     # Reuse the recipe's _make, toolchain and build() rather than duplicating flags.
     # package() and install hooks are deliberately never invoked.
-    runuser -u builder -- env HOME=/home/builder OMARCHY_BUILD_JOBS=4 bash -euo pipefail -c \
-      'export srcdir="$PWD/src"; source ./PKGBUILD; build'
+    runuser -u builder -- env HOME=/home/builder OMARCHY_BUILD_JOBS=4 bash -euo pipefail <<'KERNEL_BUILD'
+export srcdir="$PWD/src"
+source ./PKGBUILD
+# makepkg calls build() from srcdir; the recipe itself enters linux from there.
+cd "$srcdir"
+build
+KERNEL_BUILD
     cd /build/recipe/src/linux
     test -s build/base/arch/arm64/boot/Image
     test -s build/base/arch/arm64/boot/dts/apple/t8132-j713.dtb

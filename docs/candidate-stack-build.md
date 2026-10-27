@@ -102,6 +102,17 @@ The temporary image is removed by its unique tag; no global Docker cleanup runs.
 
 ## Validation and next gate
 
+The [first full-build attempt](https://github.com/frozen-infinity/pre-asahi/actions/runs/40466183118)
+passed validation and kernel preparation, then stopped at `PKGBUILD: line 118:
+cd: linux: No such file or directory`. The wrapper called `build()` from the
+recipe directory, whereas makepkg calls it from `$srcdir`. The fix sources the
+recipe first, enters `$srcdir`, then calls the unchanged upstream function.
+A regression check executes that exact invocation with a temporary recipe,
+including a directory containing spaces. No source pin or kernel config changed.
+After merging this fix, start a new **main / kernel** workflow; re-running the
+old workflow attempt still uses its original commit. Full compilation and QEMU
+remain untested until that new run succeeds.
+
 Local validation covers unit tests for input pins, signature-status parsing,
 archive integrity, host refusal and candidate artifact/receipt binding, plus
 shell syntax. The first CI run's decoded logs confirmed Aura 0.1.0.r20261022-4
