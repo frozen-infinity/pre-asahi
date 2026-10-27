@@ -1,0 +1,8 @@
+{
+  "repository": "aurora-silicon/u-boot",
+  "commit": "7680260272f3612a13f0c9a6c7bfbc5e9ba7ce8c",
+  "files": {
+    "arch/arm/mach-apple/board.c": "02b7208d34ffcb15c6ce191626cb454a38bc8adbfc1bf5dbdc70f123970cba56",
+    "lib/efi_loader/efi_dt_fixup.c": "fa2970a944e6a914f650783c99900c821efe32414528b8a4baf503bf6010965c"
+  }
+}
