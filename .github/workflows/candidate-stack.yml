@@ -6,8 +6,8 @@ on:
       component:
         description: Build-only candidate component
         type: choice
-        default: both
-        options: [both, aura, kernel-config]
+        default: kernel
+        options: [kernel, both, aura, kernel-config]
 
 permissions:
   contents: read
@@ -23,6 +23,7 @@ jobs:
           persist-credentials: false
       - run: python3 -m unittest discover -s tests -v
       - run: bash -n ci/candidate-container.sh
+      - run: gcc -std=c11 -Wall -Wextra -Werror -fsyntax-only ci/qemu-pid1.c
       - id: select
         env:
           COMPONENT: ${{ inputs.component }}
@@ -30,7 +31,7 @@ jobs:
           python3 - <<'PY'
           import json, os
           selected = os.environ['COMPONENT']
-          assert selected in ('both', 'aura', 'kernel-config')
+          assert selected in ('kernel', 'both', 'aura', 'kernel-config')
           choices = ['aura', 'kernel-config'] if selected == 'both' else [selected]
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('components=' + json.dumps(choices) + '\n')
@@ -38,7 +39,7 @@ jobs:
   build:
     needs: validate
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 120
+    timeout-minutes: 240
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -54,6 +55,18 @@ jobs:
         run: |
           set -o pipefail
           python3 scripts/candidate_build.py --component "$COMPONENT" 2>&1 | tee candidate-runner.log
+      - name: Install emulator on disposable runner
+        if: matrix.component == 'kernel'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends qemu-system-arm gcc libc6-dev
+      - name: Boot the candidate Image to diagnostic PID 1 on QEMU virt
+        if: matrix.component == 'kernel'
+        run: |
+          set -o pipefail
+          results=(work/candidate-stack/kernel-*/result)
+          test "${#results[@]}" -eq 1
+          python3 scripts/candidate_smoke.py --result "${results[0]}" 2>&1 | tee candidate-smoke.log
       - name: Retain unqualified results and failure logs
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -66,3 +79,4 @@ jobs:
             work/candidate-stack/*/result/**
             work/candidate-stack/*/build.log
             candidate-runner.log
+            candidate-smoke.log

@@ -41,13 +41,15 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 The next candidate milestone runs entirely on disposable ARM Linux builders:
 
 1. After merging the candidate build PR, open **Actions → Candidate stack build**.
-2. Choose **Run workflow → main → both**.
-3. Share the run link in chat so we can review the Aura package build and matching
-   kernel configuration results.
+2. Choose **Run workflow → main → kernel**.
+3. Share the run link in chat so we can review the full kernel/modules/DTB build
+   and its RAM-only QEMU PID 1 check.
 
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
-outputs and limits. These new build jobs have not yet run; success will not count
-as native boot proof. Leave the Mac and T7 unchanged for this step.
+outputs and limits. Aura packaging and kernel preparation passed in
+[the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).
+The full kernel and candidate emulator steps have not yet run; success will not
+count as native boot proof. Leave the Mac and T7 unchanged for this step.
 
 ### Earlier baseline preparation
 
