@@ -43,8 +43,10 @@ assuming an enabled U-Boot configuration completes it automatically.
 
 Update: [OS-DTB preparation and a real production-importer probe](prepared-os-dtb.md)
 have now run on the Mac. The static candidate was preserved separately; the
-generic synthetic runtime failed at CPU topology import without mutating the
-destination. The remaining work below must account for that observed mismatch.
+generic fixture's CPU mismatch was diagnosed and then corrected using the saved
+tree's 10 CPU identifiers. Full synthetic import and repeat import now pass, with
+policy/reference checks and unchanged rejection controls. Real runtime state and
+the actual board/helper handoff remain unverified.
 
 Prepare a workspace-only OS-DT handoff candidate that records its kernel source
 identity and explicit buffer contract, preserves the original DTB and validates
