@@ -1,5 +1,10 @@
 # Next component: pinned U-Boot
 
+Update: [U-Boot run 40493847655](https://github.com/frozen-infinity/pre-asahi/actions/runs/40493847655)
+passed, and the three real component ZIPs have since passed
+[the combined artifact-set review](artifact-set-review.md). The build instructions
+below are retained for reproduction; no new U-Boot build is required now.
+
 The saved kernel build is usable as an emulator-tested development input.
 [Run 40468038656](https://github.com/frozen-infinity/pre-asahi/actions/runs/40468038656)
 compiled the kernel, modules and Apple device trees and returned
