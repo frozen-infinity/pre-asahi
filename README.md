@@ -57,8 +57,9 @@ including the saved DTB's missing opt-in marker and remaining first-entry needs.
 
 The saved OS DTB now has a separate workspace-only
 [prepared handoff candidate and importer probe](docs/prepared-os-dtb.md).
-Preparation and rejection controls passed on the Mac, but the generic synthetic
-runtime was rejected at CPU import; full runtime handoff remains unverified.
+The fixture now matches all 10 CPU identifiers from that saved DTB. Full synthetic
+import, repeat import, rejection and static-policy/reference checks passed on the
+Mac. Actual runtime handoff remains unverified.
 No rebuild is required. The guide gives an optional local reproduction command.
 
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,

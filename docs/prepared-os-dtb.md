@@ -16,12 +16,27 @@ the Mac. It does not alter the ZIP, install boot files or execute on bare metal.
 | Prepared tree, absent runtime source | Returns `-EINVAL`, destination unchanged |
 | Prepared tree, wrong-model synthetic source | Returns `-EINVAL`, destination unchanged |
 | Prepared tree, generic upstream synthetic runtime | Returns `-EINVAL`; diagnostic first failure `j713_cpus`; destination unchanged |
+| Prepared tree, CPU-topology-matched synthetic runtime | Returns **1** (full importer acceptance), including a repeat import |
 
 The generic fixture contains only its small test CPU topology. It is not a
 capture of this M4 and does not satisfy the real OS tree's CPU import contract.
-This is a diagnosed fixture mismatch, not a successful full handoff or proof of
-a CPU driver bug. No copied firmware addresses or synthetic runtime imports are
-saved as candidate boot inputs.
+This fixture mismatch was corrected in the host test: the runtime fixture now
+enumerates all **10 CPU identifiers** from the saved OS tree and assigns invented,
+aligned test release slots. The production importer is unchanged. With those
+synthetic CPU entries, the real OS DTB passes the complete importer, not just the
+limited diagnostic stages. This is synthetic acceptance, not a native handoff
+or evidence that actual CPU release slots are valid.
+
+The expanded probe removes a runtime CPU and misaligns a release slot in separate
+controls. Both fail without changing the destination. After successful import
+it checks original clock/power-domain/pinctrl policy properties, all properties
+of PMGR/power-management/pinctrl nodes, and resolution of every memory-region
+phandle. A repeat import succeeds without adding reservation-map entries, and
+the source runtime buffer remains unchanged. No imported/completion marker is
+present, because the real board/hardware-helper sequence has not run.
+
+No synthetic CPU slots, copied firmware addresses or imported destination are
+saved as candidate boot inputs. The invented CPU data stays in the host process.
 
 The prepared file is named **j713-STATIC-REVIEW-ONLY.dtb**. It is saved *before*
 the synthetic import is attempted and has no imported/completion marker. Adding
@@ -49,8 +64,9 @@ recorded kernel outputs, prior QEMU evidence and importer source hashes.
 A new ignored `work/os-dtb-review-*` directory contains the preserved original,
 prepared static tree, host probe, synthetic runtime fixture and explicit report.
 The status is **STATIC_OS_DTB_PREPARED_RUNTIME_UNVERIFIED**. A zero command exit
-means preparation/control checks completed; it does not mean synthetic import
-or native boot succeeded. Read `synthetic_import_success` and the recorded return.
+now requires preparation, rejection controls and both topology-matched synthetic
+imports to succeed. Read `synthetic_import_success` and the recorded return;
+neither means a native boot succeeded.
 Neither the binaries nor generated trees/reports belong in the repository.
 
 The C probe includes the unmodified production importer. Its stage diagnostics
@@ -72,9 +88,9 @@ enrollment from the relevant recovery environment and Stage 2 payload loading.
 Those generic instructions are not validation for this Mac/firmware or a reason
 to replace the existing macOS boot object.
 
-Mac-side testing remains authorized. Next, the generic fixture needs CPU
-topology matching the actual saved OS tree (still explicitly synthetic), followed
-by any other graph-contract failures exposed by that test. In parallel, first
+Mac-side testing remains authorized. The saved tree's topology-matched synthetic
+import gate has now passed. Next is integrating actual DT selection and the EFI
+fixup path without substituting fixture bytes for real loader state. First
 entry needs an audited J713/current-firmware provisioning procedure that retains
 macOS and establishes observable logs and recovery. A real runtime DT can only
 come from a verified loader run; it cannot be manufactured from fixture success.
