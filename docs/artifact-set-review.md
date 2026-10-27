@@ -75,8 +75,9 @@ must identify these inputs separately:
 | Firmware/runtime state | Target-specific admission and reservations, not supplied by ZIPs |
 
 This checker deliberately produces a report instead of concatenating a boot
-image. Missing runtime state cannot be invented from a successful build. The next
-engineering gate is a fixture-based test of the pinned J713 DT importer and an
+image. Missing runtime state cannot be invented from a successful build. The
+[pinned J713 importer has since passed its synthetic host suite](j713-handoff-fixtures.md).
+The next gate is checking the saved OS tree's static contract and defining an
 explicit bundle format that preserves its runtime handoff requirements. Only
 after those are understood can bundle assembly be reviewed. Native entry,
 logging and recovery for the actual Mac/firmware remain separate gates. No T7

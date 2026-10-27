@@ -1,0 +1,33 @@
+name: J713 handoff fixtures
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-fixtures:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests -v
+      - name: Install host fixture tools on disposable runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential device-tree-compiler
+      - name: Fetch locked source subset and run synthetic importer tests
+        run: python3 scripts/j713_fixtures.py --fetch
+      - name: Retain synthetic results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: SYNTHETIC-j713-handoff
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            reports/j713-fixtures-*/result.json
+            reports/j713-fixtures-*/host-tests.log

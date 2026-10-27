@@ -43,9 +43,12 @@ integrity/source/emulation-evidence check: **145 recorded build outputs matched*
 See [the artifact-set review](docs/artifact-set-review.md) for the checked inputs,
 remaining handoff gates and optional command to reproduce the check.
 
-No new CI build, kernel rebuild or hardware action is required now. Keep the
-original archives intact; review/merge the artifact checker PR to retain the
-verification code and development bundle contract in the repository.
+The production J713 importer also passed **56 synthetic handoff cases and five
+padding checks** locally using its pinned upstream host suite. See
+[the fixture guide](docs/j713-handoff-fixtures.md). After merging the fixture PR,
+you can reproduce this on Linux through **Actions → J713 handoff fixtures → Run
+workflow → main** and send the run link. This does not rebuild the kernel or
+U-Boot. Keep the original archives intact; no hardware action is requested.
 
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
