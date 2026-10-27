@@ -73,6 +73,12 @@ protocol and returning without launching Linux. After merging its PR, run
 **Actions → ARM64 EFI discovery probe → Run workflow → main** and share the link
 for Linux-runner reproduction. No kernel rebuild is needed.
 
+The next [selected-source U-Boot EFI discovery test](docs/uboot-efi-discovery.md)
+cross-builds the same pinned revision for QEMU's generic ARM64 board and expects
+the protocol to be present. Its PR check runs automatically; review its result
+instead of starting another build. This does not execute the Apple binary or
+claim native M4 support.
+
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
 [the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).
