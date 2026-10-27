@@ -50,6 +50,11 @@ you can reproduce this on Linux through **Actions → J713 handoff fixtures → 
 workflow → main** and send the run link. This does not rebuild the kernel or
 U-Boot. Keep the original archives intact; no hardware action is requested.
 
+The [Linux fixture run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40500142540)
+also passed. Necessary Mac-side testing is now explicitly within scope toward
+native Linux. See [the next native-integration step](docs/native-next-step.md),
+including the saved DTB's missing opt-in marker and remaining first-entry needs.
+
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
 [the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).

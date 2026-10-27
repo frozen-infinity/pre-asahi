@@ -11,4 +11,6 @@
 
 ## Current hardware preference
 
-The user may be able to borrow a modern Mac but explicitly wants to avoid risky operations. Keep current work to source analysis, emulator/build-host tools and read-only identification. Do not initiate target installation, T7 erasure, boot-policy changes or experimental hardware boot on the assumption that external storage isolates the Mac. Preserve this preference unless the user later changes the scope explicitly.
+On 2026-10-27 the user explicitly clarified that necessary testing and running code on the Mac are authorized toward the final goal of native Linux on the M4. Do not keep the project artificially limited to host-only preparation. Progress to relevant Mac-side tests and native bring-up when their entry, logging and recovery requirements are concretely verified; compilation, emulation and synthetic tests alone do not establish those requirements.
+
+The user still wants to avoid unnecessary risk and may be able to borrow another modern Mac for recovery. External T7 storage does not isolate firmware or boot policy. Authorization for necessary Mac testing is not blanket approval to erase internal storage, bypass installer model checks or change startup security without a concrete reviewed procedure and the required scope. Do not ask again for permission for ordinary Mac-side tests already covered by this clarification.
