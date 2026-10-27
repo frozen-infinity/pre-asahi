@@ -43,13 +43,13 @@ def sha256(path):
             h.update(block)
     return h.hexdigest()
 
-def run_test(timeout):
+def run_test(timeout, image=None, initramfs=None, config=None, report_dir=None, source_record=None):
     qemu = shutil.which('qemu-system-aarch64')
     if not qemu:
         raise ValueError('Install qemu-system-aarch64 on the Arch build host')
-    image = bringup.WORK / 'build/j713/arch/arm64/boot/Image'
-    initramfs = bringup.WORK / 'artifacts/initramfs.cpio.gz'
-    config = bringup.WORK / 'build/j713/.config'
+    image = image or bringup.WORK / 'build/j713/arch/arm64/boot/Image'
+    initramfs = initramfs or bringup.WORK / 'artifacts/initramfs.cpio.gz'
+    config = config or bringup.WORK / 'build/j713/.config'
     with image.open('rb') as stream:
         validate_image(stream.read(64))
     settings = config.read_text().splitlines()
@@ -58,11 +58,12 @@ def run_test(timeout):
     missing = [x for x in required if x not in settings]
     if missing:
         raise ValueError('Existing kernel config lacks QEMU prerequisites: ' + ', '.join(missing))
-    inputs = [image, initramfs, config, bringup.LOCK]
-    hashes = {str(p.relative_to(bringup.ROOT)): sha256(p) for p in inputs}
+    inputs = [image, initramfs, config, source_record or bringup.LOCK]
+    hashes = {str(p): sha256(p) for p in inputs}
     version = bringup.capture([qemu, '--version'])
-    bringup.REPORTS.mkdir(parents=True, exist_ok=True)
-    attempt = Path(tempfile.mkdtemp(prefix='qemu-virt-', dir=bringup.REPORTS))
+    report_dir = report_dir or bringup.REPORTS
+    report_dir.mkdir(parents=True, exist_ok=True)
+    attempt = Path(tempfile.mkdtemp(prefix='qemu-virt-', dir=report_dir))
     logfile = attempt / 'console.log'
     args = command(qemu, image, initramfs)
     print('Emulated QEMU virt test only. Logs: ' + str(attempt), flush=True)

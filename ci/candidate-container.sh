@@ -6,7 +6,7 @@ component=$1
 commit=$2
 case "$component" in
   aura) package=aura; source_name=aura; source_url=https://github.com/aurora-silicon/aura.git ;;
-  kernel-config) package=linux-aurora; source_name=linux; source_url=https://github.com/aurora-silicon/linux.git ;;
+  kernel-config|kernel) package=linux-aurora; source_name=linux; source_url=https://github.com/aurora-silicon/linux.git ;;
   *) exit 2 ;;
 esac
 
@@ -48,7 +48,7 @@ if [[ $component == aura ]]; then
   cp "${sources[@]}" /output/sources/
 else
   # prepare() resolves/validates the paired configuration and generates headers.
-  # This deliberately does not call the full kernel build() or package().
+  # The configuration-only mode stops here. Full mode calls the pinned build().
   runuser -u builder -- env HOME=/home/builder OMARCHY_BUILD_JOBS=4 \
     makepkg --config /build/makepkg.conf --holdver --noconfirm --nobuild
   config=/build/recipe/src/linux/build/base/.config
@@ -57,6 +57,26 @@ else
   mkdir -p /output/kernel-config
   cp "$config" /output/kernel-config/resolved.config
   cp /build/recipe/src/linux/build/base/version /output/kernel-config/kernelrelease.txt
+  if [[ $component == kernel ]]; then
+    # Reuse the recipe's _make, toolchain and build() rather than duplicating flags.
+    # package() and install hooks are deliberately never invoked.
+    runuser -u builder -- env HOME=/home/builder OMARCHY_BUILD_JOBS=4 bash -euo pipefail -c \
+      'export srcdir="$PWD/src"; source ./PKGBUILD; build'
+    cd /build/recipe/src/linux
+    test -s build/base/arch/arm64/boot/Image
+    test -s build/base/arch/arm64/boot/dts/apple/t8132-j713.dtb
+    test -s build/base/modules.order
+    mkdir -p /output/kernel/dtbs /output/sources
+    cp build/base/arch/arm64/boot/Image /output/kernel/
+    cp build/base/arch/arm64/boot/dts/apple/*.dtb /output/kernel/dtbs/
+    cp build/base/Module.symvers build/base/modules.order build/base/System.map /output/kernel/
+    find build/base -type f -name '*.ko' -print0 > /build/modules.list
+    test -s /build/modules.list
+    tar --null --files-from=/build/modules.list --zstd -cf /output/kernel/modules.tar.zst
+    # Retain the exact tracked sources plus all recipe/config inputs alongside binaries.
+    runuser -u builder -- git archive --format=tar "$commit" | gzip -1 > /output/sources/linux-source.tar.gz
+    tar -C /recipe-input -czf /output/sources/kernel-recipe.tar.gz .
+  fi
 fi
 [[ $(runuser -u builder -- git -C "/build/recipe/src/$source_name" rev-parse HEAD) == "$commit" ]]
 pacman -Q > /output/container-packages.txt
@@ -65,7 +85,8 @@ python - "$component" "$commit" <<'PY'
 import json, pathlib, sys
 pathlib.Path('/output/component-result.json').write_text(json.dumps({
     'component': sys.argv[1], 'source_commit': sys.argv[2],
-    'status': 'AURA_PACKAGE_BUILT' if sys.argv[1] == 'aura' else 'KERNEL_CONFIG_PREPARED',
-    'full_kernel_built': False, 'native_boot_proven': False,
+    'status': {'aura': 'AURA_PACKAGE_BUILT', 'kernel-config': 'KERNEL_CONFIG_PREPARED',
+               'kernel': 'FULL_KERNEL_BUILT_QEMU_PENDING'}[sys.argv[1]],
+    'full_kernel_built': sys.argv[1] == 'kernel', 'native_boot_proven': False,
     'installation_qualified': False}, indent=2) + '\n')
 PY

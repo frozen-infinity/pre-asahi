@@ -15,7 +15,8 @@ import urllib.request
 import bringup
 
 SPEC = bringup.ROOT / 'configs/candidate-stack.json'
-COMPONENTS = {'aura': ('aura', 'package'), 'kernel-config': ('linux-aurora', 'configure')}
+COMPONENTS = {'aura': ('aura', 'package'), 'kernel-config': ('linux-aurora', 'configure'),
+              'kernel': ('linux-aurora', 'Image modules dtbs')}
 
 
 def hash_file(path):
