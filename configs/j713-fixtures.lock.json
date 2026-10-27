@@ -1,0 +1,21 @@
+{
+  "repository": "aurora-silicon/u-boot",
+  "commit": "7680260272f3612a13f0c9a6c7bfbc5e9ba7ce8c",
+  "files": {
+    "arch/arm/include/asm/arch-apple/j713_fdt.h": "11a6075fab85af5abe966cff33444bab6e15a922e83355a8197cfd28a955067b",
+    "arch/arm/mach-apple/j713_fdt.c": "fb6d279f072eeac2a78951f06cd3d7d88c5c49e21369254af2235af26e10d1e6",
+    "scripts/dtc/libfdt/fdt.c": "0574facf26b0e9d1fdbce3747ceba66b4bdc16bd161601e2bed6a2791b1774c6",
+    "scripts/dtc/libfdt/fdt.h": "127ce215354a756fca6152e34c282ddd0498688148dcff9d5132f7d9af76c201",
+    "scripts/dtc/libfdt/fdt_addresses.c": "11ac9fb9f20f798483bc1e9e2835b79ef110e55ed7114e20337e59a1b6f4125f",
+    "scripts/dtc/libfdt/fdt_empty_tree.c": "f3cdbfa1bcc86cc841544fee5a16c2f66a4da86b1065eaadab9700addb858369",
+    "scripts/dtc/libfdt/fdt_ro.c": "9ebe29c3a5d455f9080509852367273003a6d7fef66c81f80dd4fb229077bb25",
+    "scripts/dtc/libfdt/fdt_rw.c": "c11358cc70404fe78ecfbc4eb8485f59fd356af8dea1fc1bf4bdfdad943bc061",
+    "scripts/dtc/libfdt/fdt_strerror.c": "4a1de9eb7eadefe07cfe53c238785aa9bdd54e5387903c2faa7e42006027c137",
+    "scripts/dtc/libfdt/fdt_sw.c": "e9d193f023880f4359c3ed9954d678b51a87b1d66b783318a9d69a8122378122",
+    "scripts/dtc/libfdt/fdt_wip.c": "a26966b2d991b432473f5c7f6740a3db97ae51313da0ad9eba56048d56c06c73",
+    "scripts/dtc/libfdt/libfdt.h": "7670f8e2672006e85c27c576161a6e65d18d8321e92f98ccace9fac96ee893e2",
+    "scripts/dtc/libfdt/libfdt_env.h": "273bb264cacd60bb005cfa558bee084558469b9107eaf40d7e1362571ed1bc94",
+    "scripts/dtc/libfdt/libfdt_internal.h": "e26ca18ff2ad39df44add4714262cf5c96f8cb763f28f2dcfe8ce5d49c4384e0",
+    "test/py/tests/test_apple_j713_fdt.py": "b979ed3d67ec685c507179a8101b13e743b26dce0eb364c6c801a4a7f02db35f"
+  }
+}
