@@ -62,6 +62,11 @@ import, repeat import, rejection and static-policy/reference checks passed on th
 Mac. Actual runtime handoff remains unverified.
 No rebuild is required. The guide gives an optional local reproduction command.
 
+The [EFI fixup/publication host probe](docs/efi-handoff.md) now also passes with
+the production EFI function and board hook. It checks buffer negotiation and
+publication ordering with mocked EFI services/helper; actual EFI execution and
+native first entry remain untested. No new user run is required for this result.
+
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
 [the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).

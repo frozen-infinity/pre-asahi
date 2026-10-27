@@ -58,7 +58,7 @@ def prepare(kernel_archive):
     bringup.save(attempt / 'result.json', report)
     print(json.dumps(report, indent=2))
     print('Review-only files: ' + str(attempt))
-    return 0
+    return attempt
 
 
 def main():
@@ -66,7 +66,8 @@ def main():
     parser.add_argument('--kernel', type=Path, required=True)
     args = parser.parse_args()
     try:
-        return prepare(args.kernel)
+        prepare(args.kernel)
+        return 0
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
         print('STOP: ' + str(error), file=sys.stderr)
         return 1
