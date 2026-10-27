@@ -6,8 +6,8 @@ on:
       component:
         description: Build-only candidate component
         type: choice
-        default: kernel
-        options: [kernel, both, aura, kernel-config]
+        default: uboot
+        options: [uboot, kernel, both, aura, kernel-config]
 
 permissions:
   contents: read
@@ -31,7 +31,7 @@ jobs:
           python3 - <<'PY'
           import json, os
           selected = os.environ['COMPONENT']
-          assert selected in ('kernel', 'both', 'aura', 'kernel-config')
+          assert selected in ('uboot', 'kernel', 'both', 'aura', 'kernel-config')
           choices = ['aura', 'kernel-config'] if selected == 'both' else [selected]
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('components=' + json.dumps(choices) + '\n')

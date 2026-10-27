@@ -16,7 +16,7 @@ import bringup
 
 SPEC = bringup.ROOT / 'configs/candidate-stack.json'
 COMPONENTS = {'aura': ('aura', 'package'), 'kernel-config': ('linux-aurora', 'configure'),
-              'kernel': ('linux-aurora', 'Image modules dtbs')}
+              'kernel': ('linux-aurora', 'Image modules dtbs'), 'uboot': ('uboot-aurora', 'package')}
 
 
 def hash_file(path):
@@ -30,7 +30,8 @@ def hash_file(path):
 def check_snapshot(root, spec):
     pins = json.loads((root / 'sources.json').read_text())
     for key, field, directory in [('kernel-aurora', 'kernel_commit', 'linux-aurora'),
-                                  ('aura', 'aura_commit', 'aura')]:
+                                  ('aura', 'aura_commit', 'aura'),
+                                  ('uboot-aurora', 'uboot_commit', 'uboot-aurora')]:
         if pins[key]['commit'] != spec[field]:
             raise ValueError('Packaging/source manifest mismatch: ' + key)
         recipe = (root / 'packages' / directory / 'PKGBUILD').read_text()
@@ -143,6 +144,7 @@ def build(component):
     receipt = {'status': 'ATTEMPT_STARTED', 'component': component, 'mode': mode,
                'packaging_commit': spec['packaging_commit'], 'kernel_commit': spec['kernel_commit'],
                'aura_commit': spec['aura_commit'], 'base_sha256': base['sha256'],
+               'uboot_commit': spec['uboot_commit'],
                'base_signature_signer': spec['base_signer'], 'recipe_sha256': recipe_hashes,
                'native_boot_proven': False,
                'note': 'Build-only development result. Container dependency updates are not a hermetic package snapshot.'}
@@ -150,7 +152,8 @@ def build(component):
     image = 'pre-asahi-candidate:' + attempt.name
     try:
         bringup.run(['docker', 'import', '--platform', 'linux/arm64', archive, image])
-        commit = spec['aura_commit'] if component == 'aura' else spec['kernel_commit']
+        field = {'aura': 'aura_commit', 'uboot': 'uboot_commit'}.get(component, 'kernel_commit')
+        commit = spec[field]
         args = container_args(image, recipe, bringup.ROOT / 'ci/candidate-container.sh', output, component, commit)
         print('Disposable build attempt: ' + str(attempt), flush=True)
         with (attempt / 'build.log').open('w') as log:
