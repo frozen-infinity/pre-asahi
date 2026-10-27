@@ -6,6 +6,7 @@ component=$1
 commit=$2
 case "$component" in
   aura) package=aura; source_name=aura; source_url=https://github.com/aurora-silicon/aura.git ;;
+  uboot) package=uboot-aurora; source_name=u-boot; source_url=https://github.com/aurora-silicon/u-boot.git ;;
   kernel-config|kernel) package=linux-aurora; source_name=linux; source_url=https://github.com/aurora-silicon/linux.git ;;
   *) exit 2 ;;
 esac
@@ -15,6 +16,9 @@ pacman-key --init
 pacman-key --populate archlinuxarm
 pacman -Syu --noconfirm --needed base-devel git python clang llvm lld rustup make \
   bc dtc kmod libelf pahole cpio perl tar xz xmlto
+if [[ $component == uboot ]]; then
+  pacman -S --noconfirm --needed python-pyelftools swig openssl
+fi
 useradd --create-home builder
 mkdir -p /build/recipe /build/source-cache /build/pkgdest
 cp -a /recipe-input/. /build/recipe/
@@ -33,7 +37,7 @@ runuser -u builder -- git -C "/build/source-cache/$source_name" fetch --depth=1 
 runuser -u builder -- git -C "/build/source-cache/$source_name" symbolic-ref HEAD refs/heads/pinned
 
 cd /build/recipe
-if [[ $component == aura ]]; then
+if [[ $component == aura || $component == uboot ]]; then
   runuser -u builder -- env HOME=/home/builder OMARCHY_BUILD_JOBS=4 \
     makepkg --config /build/makepkg.conf --holdver --noconfirm --cleanbuild --nosign
   # Accompany distributable GPL components with the complete makepkg source archive.
@@ -46,6 +50,19 @@ if [[ $component == aura ]]; then
   (( ${#packages[@]} > 0 && ${#sources[@]} > 0 ))
   cp "${packages[@]}" /output/packages/
   cp "${sources[@]}" /output/sources/
+  if [[ $component == uboot ]]; then
+    build_dir=/build/recipe/src/u-boot/build-aurora
+    grep -qx 'CONFIG_APPLE_J713_FDT=y' "$build_dir/.config"
+    test -s "$build_dir/u-boot-nodtb.bin"
+    test -s "$build_dir/u-boot"
+    # The default generated DT is J274. Only retain the recipe's nodtb payload.
+    mkdir -p /output/uboot
+    cp "$build_dir/u-boot-nodtb.bin" /output/uboot/
+    cp "$build_dir/u-boot" /output/uboot/u-boot.elf
+    cp "$build_dir/.config" /output/uboot/resolved.config
+    LC_ALL=C readelf -h "$build_dir/u-boot" > /output/uboot/elf-header.txt
+    grep -q 'Machine:.*AArch64' /output/uboot/elf-header.txt
+  fi
 else
   # prepare() resolves/validates the paired configuration and generates headers.
   # The configuration-only mode stops here. Full mode calls the pinned build().
@@ -85,12 +102,16 @@ KERNEL_BUILD
 fi
 [[ $(runuser -u builder -- git -C "/build/recipe/src/$source_name" rev-parse HEAD) == "$commit" ]]
 pacman -Q > /output/container-packages.txt
-runuser -u builder -- env HOME=/home/builder rustup run 1.99.0 rustc --version > /output/rust-version.txt
+if [[ $component == uboot ]]; then
+  gcc --version > /output/compiler-version.txt
+else
+  runuser -u builder -- env HOME=/home/builder rustup run 1.99.0 rustc --version > /output/rust-version.txt
+fi
 python - "$component" "$commit" <<'PY'
 import json, pathlib, sys
 pathlib.Path('/output/component-result.json').write_text(json.dumps({
     'component': sys.argv[1], 'source_commit': sys.argv[2],
-    'status': {'aura': 'AURA_PACKAGE_BUILT', 'kernel-config': 'KERNEL_CONFIG_PREPARED',
+    'status': {'aura': 'AURA_PACKAGE_BUILT', 'uboot': 'UBOOT_PACKAGE_BUILT', 'kernel-config': 'KERNEL_CONFIG_PREPARED',
                'kernel': 'FULL_KERNEL_BUILT_QEMU_PENDING'}[sys.argv[1]],
     'full_kernel_built': sys.argv[1] == 'kernel', 'native_boot_proven': False,
     'installation_qualified': False}, indent=2) + '\n')

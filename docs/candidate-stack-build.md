@@ -2,9 +2,10 @@
 
 Aura packaging and matching kernel preparation passed in
 [run 40401747548](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).
-The next milestone builds the complete kernel Image, modules and device trees,
-then attempts a RAM-only PID 1 test on QEMU virt. It does not install components
-or establish a usable native desktop.
+The complete kernel Image/modules/DTBs and RAM-only QEMU PID 1 test subsequently
+passed in [run 40468038656](https://github.com/frozen-infinity/pre-asahi/actions/runs/40468038656).
+The next component is [the matching U-Boot build](boot-chain-integration.md).
+It does not install components or establish a usable native desktop.
 
 ## Why this pairing
 
@@ -29,7 +30,7 @@ this candidate DTB with the baseline kernel or m1n1 as an assumed working bundle
 After merging this PR:
 
 1. Open the repository's **Actions** tab and select **Candidate stack build**.
-2. Choose **Run workflow**, branch **main**, component **kernel**, then start it.
+2. Choose **Run workflow**, branch **main**, component **uboot**, then start it.
 3. Share the run link here. If it fails, keep the logs; do not change pins to make
    a failing source or signature check pass.
 
@@ -54,6 +55,9 @@ refuses macOS and Intel Linux hosts. Do not adapt it to run directly on the Mac.
 * **aura:** runs the pinned package build and makes a source archive alongside it.
   `AURA_PACKAGE_BUILT` means compilation and packaging completed, not enrollment
   or hardware execution.
+* **uboot:** builds/packages the matching U-Boot with its source archive and
+  retains the nodtb payload, ELF and resolved J713-enabled config. This is the
+  current next step; it does not rebuild the kernel or run Apple code in QEMU.
 * **kernel-config:** runs makepkg's prepare phase, including private bindgen,
   Rust setup, resolved configuration validation and generated headers. It saves
   the configuration and kernel release. `KERNEL_CONFIG_PREPARED` does not mean a
@@ -109,17 +113,16 @@ recipe directory, whereas makepkg calls it from `$srcdir`. The fix sources the
 recipe first, enters `$srcdir`, then calls the unchanged upstream function.
 A regression check executes that exact invocation with a temporary recipe,
 including a directory containing spaces. No source pin or kernel config changed.
-After merging this fix, start a new **main / kernel** workflow; re-running the
-old workflow attempt still uses its original commit. Full compilation and QEMU
-remain untested until that new run succeeds.
+The subsequent successful full build used this fix. Re-running the old failed
+attempt would still use its original commit; no such retry is needed now.
 
 Local validation covers unit tests for input pins, signature-status parsing,
 archive integrity, host refusal and candidate artifact/receipt binding, plus
 shell syntax. The first CI run's decoded logs confirmed Aura 0.1.0.r20261022-4
 packaging and preparation of Linux 7.3.0-1-2-ARCH, including Rust/bindgen code
-generation. The full kernel build and candidate emulator job have not yet run.
-The Linux-only C probe is compiled/checked on CI; macOS headers cannot check its
-Linux mount calls.
+generation. The later full kernel build and candidate emulator test also passed.
+The Linux-only C probe was compiled/checked on CI and the subsequent full build
+and emulator test passed. The new U-Boot mode still awaits its first CI run.
 
 Once compilation and candidate emulation pass, review the archived evidence
 before extending stack integration. U-Boot, firmware admission, userspace, graphics and desktop

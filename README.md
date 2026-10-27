@@ -41,21 +41,21 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 The next candidate milestone runs entirely on disposable ARM Linux builders:
 
 1. After merging the candidate build PR, open **Actions → Candidate stack build**.
-2. Choose **Run workflow → main → kernel**.
-3. Share the run link in chat so we can review the full kernel/modules/DTB build
-   and its RAM-only QEMU PID 1 check.
+2. Choose **Run workflow → main → uboot**.
+3. Share the run link in chat so we can review the matching U-Boot package and
+   J713 handoff configuration. This does not rebuild your saved kernel.
 
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
 [the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).
-The full kernel and candidate emulator steps have not yet run; success will not
-count as native boot proof. Leave the Mac and T7 unchanged for this step.
+The full kernel/modules/DTB build and candidate QEMU PID 1 test passed in
+[run 40468038656](https://github.com/frozen-infinity/pre-asahi/actions/runs/40468038656).
+Keep the downloaded archive intact. Read [the boot-chain integration guide](docs/boot-chain-integration.md)
+for the next component and remaining handoff requirements. Native boot remains
+unproven. Leave the Mac and T7 unchanged for this step.
 
-If you ran [the first full-build attempt](https://github.com/frozen-infinity/pre-asahi/actions/runs/40466183118),
-it stopped after preparation with `cd: linux: No such file or directory`.
-Merge the recipe-directory fix, then start a **new** workflow on **main**, component
-**kernel**. Re-running the old run uses its old code. This was a wrapper error;
-full kernel compilation and QEMU did not start.
+The earlier `cd: linux: No such file or directory` wrapper failure was fixed
+before the successful kernel run. No retry of that old attempt is needed.
 
 ### Earlier baseline preparation
 

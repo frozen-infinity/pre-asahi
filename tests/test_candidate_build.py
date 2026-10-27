@@ -35,15 +35,17 @@ class CandidateTrustTests(unittest.TestCase):
                 candidate.check_base_bytes(archive, base)
 
     def test_packaging_manifest_recipe_and_base_must_agree(self):
-        spec = {'kernel_commit': 'a' * 40, 'aura_commit': 'b' * 40,
+        spec = {'kernel_commit': 'a' * 40, 'aura_commit': 'b' * 40, 'uboot_commit': 'e' * 40,
                 'base_sha256': 'c' * 64, 'base_bytes': 123, 'base_signer': 'D' * 40}
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
             (root / 'images').mkdir()
             (root / 'sources.json').write_text(json.dumps({
                 'kernel-aurora': {'commit': spec['kernel_commit']},
-                'aura': {'commit': spec['aura_commit']}}))
-            for package, key in [('linux-aurora', 'kernel_commit'), ('aura', 'aura_commit')]:
+                'aura': {'commit': spec['aura_commit']},
+                'uboot-aurora': {'commit': spec['uboot_commit']}}))
+            for package, key in [('linux-aurora', 'kernel_commit'), ('aura', 'aura_commit'),
+                                 ('uboot-aurora', 'uboot_commit')]:
                 directory = root / 'packages' / package
                 directory.mkdir(parents=True)
                 (directory / 'PKGBUILD').write_text('_commit=' + spec[key] + '\n')
@@ -55,6 +57,11 @@ class CandidateTrustTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Recipe/source'):
                 candidate.check_snapshot(root, spec)
             recipe.write_text('_commit=' + spec['aura_commit'] + '\n')
+            uboot = root / 'packages/uboot-aurora/PKGBUILD'
+            uboot.write_text('_commit=' + '0' * 40 + '\n')
+            with self.assertRaisesRegex(ValueError, 'Recipe/source.*uboot'):
+                candidate.check_snapshot(root, spec)
+            uboot.write_text('_commit=' + spec['uboot_commit'] + '\n')
             base['bytes'] += 1
             (root / 'images/base.json').write_text(json.dumps(base))
             with self.assertRaisesRegex(ValueError, 'base metadata'):
