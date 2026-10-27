@@ -38,12 +38,14 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 
 ## Your steps now
 
-The next candidate milestone runs entirely on disposable ARM Linux builders:
+The saved Aura, kernel and U-Boot archives have now passed a combined local
+integrity/source/emulation-evidence check: **145 recorded build outputs matched**.
+See [the artifact-set review](docs/artifact-set-review.md) for the checked inputs,
+remaining handoff gates and optional command to reproduce the check.
 
-1. After merging the candidate build PR, open **Actions → Candidate stack build**.
-2. Choose **Run workflow → main → uboot**.
-3. Share the run link in chat so we can review the matching U-Boot package and
-   J713 handoff configuration. This does not rebuild your saved kernel.
+No new CI build, kernel rebuild or hardware action is required now. Keep the
+original archives intact; review/merge the artifact checker PR to retain the
+verification code and development bundle contract in the repository.
 
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in

@@ -1,0 +1,5 @@
+{
+  "aura": {"run": 40401747548, "artifact": 12689582635, "bytes": 2348550, "sha256": "0cdd2c43c4a5f251967a5f7814a926b940e2cd60f541fd9dada636bdc28b741f"},
+  "kernel": {"run": 40468038656, "artifact": 12719093458, "bytes": 846465974, "sha256": "5d807c995fccaa776625e9acbd7034ec27be314381d232a6bcc9a559fffe19d9"},
+  "uboot": {"run": 40493847655, "artifact": 12729527101, "bytes": 59377896, "sha256": "1181441cc1d501e5d2732a84268baeff8a3caa03c1a352ab60f042ecfc2c3e6c"}
+}
