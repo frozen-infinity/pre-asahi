@@ -67,6 +67,12 @@ the production EFI function and board hook. It checks buffer negotiation and
 publication ordering with mocked EFI services/helper; actual EFI execution and
 native first entry remain untested. No new user run is required for this result.
 
+An [actual arm64 EFI discovery application](docs/efi-discovery-probe.md) has now
+built and run under QEMU/EDK2, correctly detecting the absent U-Boot-specific
+protocol and returning without launching Linux. After merging its PR, run
+**Actions → ARM64 EFI discovery probe → Run workflow → main** and share the link
+for Linux-runner reproduction. No kernel rebuild is needed.
+
 Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
 outputs and limits. Aura packaging and kernel preparation passed in
 [the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).

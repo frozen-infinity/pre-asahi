@@ -83,6 +83,11 @@ the additional mocked-service sequence. None should be committed.
 
 ## Next actual integration work
 
+Update: [the standalone arm64 EFI discovery caller](efi-discovery-probe.md) now
+builds and executes in QEMU/EDK2. It proves real EFI entry/console/protocol lookup
+for the expected missing-protocol case, while DT allocation/Fixup and Linux
+launch remain unimplemented. The work below is still required for that path.
+
 The next executable must be a real arm64 EFI caller/boot manager that selects
 the OS DTB, handles buffer negotiation and invokes the real protocol before OS
 loading. It needs to detect missing protocol or refused helper state and stop
