@@ -86,6 +86,21 @@ class MetadataContracts(unittest.TestCase):
         self.assertEqual(source.read(3), b'abc')
         self.assertEqual((source.tell(), source.transferred), (103, 3))
 
+    def test_duplicate_and_oversized_metadata_are_rejected(self):
+        from unittest.mock import Mock
+        archive = Mock()
+        info = zipfile.ZipInfo('BuildManifest.plist')
+        info.file_size = 33 * 1024**2
+        info.compress_size = 1
+        archive.infolist.return_value = [info]
+        with self.assertRaises(ValueError):
+            recovery.read_member(archive, info.filename)
+        info.file_size = 1
+        archive.infolist.return_value = [info, info]
+        with self.assertRaises(ValueError):
+            recovery.read_member(archive, info.filename)
+        archive.open.assert_not_called()
+
     def test_metadata_pass_never_means_recovery_or_hardware_pass(self):
         stream = io.BytesIO()
         with zipfile.ZipFile(stream, 'w') as archive:
