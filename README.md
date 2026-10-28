@@ -48,14 +48,17 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The follow-up parser fix reads macOS's `WholeDisk` flag correctly. A real
-read-only probe now recognizes the attached 1 TB USB T7. It also reports how many
-external devices were listed/described and a filtered reason for any omission.
-`partial` never means that the T7 is absent.
+The Mac/T7 identification check now succeeds. The next candidate is a separate
+[proxy-only Stage 1 build](docs/first-native-stage.md): visible console, no ESP
+chainload, no appended Linux payload, and NO_DISPLAY passed as an actual compiler
+flag. It preserves the selected Aura source and existing successful artifacts.
+The storage/recovery review also records why external boot can still write
+internal metadata and why the reviewed installer cannot independently select an
+internal stub and external rootfs.
 
-1. Review and merge the parser-fix PR after **Native-entry probe checks** passes.
-2. No repeat probe is currently needed; the connected Mac/T7 check succeeded.
-3. For later rechecks, use `python3 scripts/macos_boot_context.py`; share only its filtered JSON if troubleshooting is needed.
+1. Review the PR after **Stage-1 proxy-only build** passes; mark ready and merge when satisfied.
+2. No repeat probe, T7 preparation, boot-object installation or kernel rebuild is needed.
+3. CI retains build-review evidence only; do not install a candidate based on compilation success.
 
 No installer, startup-setting change, Recovery visit or kernel rebuild is
 requested. Necessary Mac-side testing remains authorized as the technical entry
