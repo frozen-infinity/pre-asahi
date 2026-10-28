@@ -18,6 +18,19 @@ class UBootEFIResultTests(unittest.TestCase):
                         valid + 'PRE_ASAHI_DT_FIXUP_LOOKUP_ERROR\n', valid.replace('PRE_ASAHI_EFI_PROBE_STARTED', '')]:
             self.assertFalse(probe.accepted(invalid))
 
+    def test_apply_pass_alone_cannot_pass_publication(self):
+        console = 'U-Boot PRE_ASAHI_EFI_PROBE_STARTED PRE_ASAHI_DT_FIXUP_AVAILABLE PRE_ASAHI_NO_LINUX_LAUNCH'
+        console += ' PRE_ASAHI_FIXUP_APPLY_PASS'
+        self.assertFalse(probe.accepted(console, publication=True))
+        required = ['PRE_ASAHI_TABLE_PUBLISHED', 'PRE_ASAHI_TABLE_CONSUMER_PASS',
+                    'PRE_ASAHI_TABLE_RESTORED', 'PRE_ASAHI_PUBLICATION_PASS']
+        complete = console + ' ' + ' '.join(required)
+        self.assertTrue(probe.accepted(complete, publication=True))
+        for marker in required:
+            self.assertFalse(probe.accepted(complete.replace(marker, ''), publication=True))
+        for error in ['PRE_ASAHI_PUBLICATION_RETAINED', 'PRE_ASAHI_PUBLICATION_FAILED']:
+            self.assertFalse(probe.accepted(complete + error, publication=True))
+
     def test_wrong_board_or_persistent_environment_fails_profile_check(self):
         valid = '\n'.join(probe.REQUIRED)
         probe.check_config(valid)

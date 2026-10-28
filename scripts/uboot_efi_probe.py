@@ -18,13 +18,20 @@ REQUIRED = ['CONFIG_EFI_LOADER=y', 'CONFIG_EFI_DT_FIXUP=y', 'CONFIG_CMD_BOOTEFI=
             'CONFIG_EFI_VARIABLE_NO_STORE=y']
 
 
-def accepted(console, fixup=False):
-    return ((not fixup or all(marker in console for marker in [
-                'PRE_ASAHI_BUFFER_NEGOTIATED', 'PRE_ASAHI_INVALID_INPUT_REJECTED',
-                'PRE_ASAHI_FIXUP_APPLY_PASS'])) and 'PRE_ASAHI_FIXUP_FAILED' not in console and all(marker in console for marker in ['U-Boot ', 'PRE_ASAHI_EFI_PROBE_STARTED',
-                'PRE_ASAHI_DT_FIXUP_AVAILABLE', 'PRE_ASAHI_NO_LINUX_LAUNCH']) and
-            not any(marker in console for marker in ['PRE_ASAHI_DT_FIXUP_ABSENT',
-                'PRE_ASAHI_DT_FIXUP_LOOKUP_ERROR', 'PRE_ASAHI_DT_FIXUP_REVISION_UNSUPPORTED']))
+def accepted(console, fixup=False, publication=False):
+    required = ['U-Boot ', 'PRE_ASAHI_EFI_PROBE_STARTED',
+                'PRE_ASAHI_DT_FIXUP_AVAILABLE', 'PRE_ASAHI_NO_LINUX_LAUNCH']
+    if fixup:
+        required += ['PRE_ASAHI_BUFFER_NEGOTIATED', 'PRE_ASAHI_INVALID_INPUT_REJECTED',
+                     'PRE_ASAHI_FIXUP_APPLY_PASS']
+    if publication:
+        required += ['PRE_ASAHI_TABLE_PUBLISHED', 'PRE_ASAHI_TABLE_CONSUMER_PASS',
+                     'PRE_ASAHI_TABLE_RESTORED', 'PRE_ASAHI_PUBLICATION_PASS']
+    refused = ['PRE_ASAHI_FIXUP_FAILED', 'PRE_ASAHI_DT_FIXUP_ABSENT',
+               'PRE_ASAHI_DT_FIXUP_LOOKUP_ERROR', 'PRE_ASAHI_DT_FIXUP_REVISION_UNSUPPORTED',
+               'PRE_ASAHI_PUBLICATION_FAILED', 'PRE_ASAHI_PUBLICATION_RETAINED']
+    return all(marker in console for marker in required) and not any(marker in console for marker in refused)
+
 
 
 def check_config(text):
@@ -36,8 +43,8 @@ def check_config(text):
         raise ValueError('Unexpected Apple/persistent/network profile in QEMU test')
 
 
-def emulate(attempt, firmware, image, qemu):
-    logfile = attempt / 'uboot-console.log'
+def emulate(attempt, firmware, image, qemu, publication=False):
+    logfile = attempt / ('publication-console.log' if publication else 'uboot-console.log')
     args = [qemu, '-machine', 'virt', '-accel', 'tcg', '-cpu', 'max', '-m', '1024',
             '-nodefaults', '-display', 'none', '-monitor', 'none', '-serial', 'stdio', '-nic', 'none',
             '-bios', str(firmware), '-device', 'loader,file=' + str(image) + ',addr=0x44000000,force-raw=on']
@@ -52,8 +59,8 @@ def emulate(attempt, firmware, image, qemu):
                     status = 'UBOOT_LOG_LIMIT'
                     break
                 console = logfile.read_text(errors='replace')
-                if accepted(console, fixup=True):
-                    status = 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS'
+                if accepted(console, fixup=not publication, publication=publication):
+                    status = 'EMULATED_UBOOT_EFI_PUBLICATION_PASS' if publication else 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS'
                     break
                 if process.poll() is not None:
                     break
@@ -123,20 +130,29 @@ def run(args):
     image = attempt / 'pre-asahi-probe.efi'
     shutil.copyfile(built_image, image)
     observation = emulate(attempt, firmware, image, args.qemu)
-    report = {'status': observation['status'], 'uboot_commit': pins['uboot_commit'],
+    publication_observation = {'status': 'NOT_RUN_APPLY_CHECK_FAILED'}
+    publication_compiler = None
+    if observation['status'] == 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS':
+        _, built_publication, publication_compiler = efi_probe.build(args.clang, args.linker, publication=True)
+        publication_image = attempt / 'pre-asahi-publication.efi'
+        shutil.copyfile(built_publication, publication_image)
+        publication_observation = emulate(attempt, firmware, publication_image, args.qemu, publication=True)
+    report = {'status': publication_observation['status'], 'uboot_commit': pins['uboot_commit'],
               'target': 'qemu_arm64_defconfig + explicit test overlay',
               'uboot_sha256': sha256(firmware), 'config_sha256': sha256(config),
               'cross_compiler': bringup.capture([args.cross_compile + 'gcc', '--version']).splitlines()[0],
               'efi_probe': compiler, 'emulation': observation,
+              'publication_probe': publication_compiler, 'publication_emulation': publication_observation,
               'apple_build_executed': False, 'j713_board_hook_executed': False,
               'native_boot_proven': False, 'fixup_apply_passed': observation['status'] == 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS',
-              'configuration_table_install_requested': False, 'linux_launched': False,
+              'configuration_table_publication_passed': publication_observation['status'] == 'EMULATED_UBOOT_EFI_PUBLICATION_PASS', 'linux_launched': False,
               'note': 'Real selected-source U-Boot EFI services on QEMU generic ARM64; Apple hardware/configuration excluded.'}
     bringup.save(attempt / 'result.json', report)
     print(json.dumps(report, indent=2))
     print('U-Boot EFI test files: ' + str(attempt))
-    if report['status'] != 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS':
-        print('\n'.join((attempt / 'uboot-console.log').read_text(errors='replace').splitlines()[-40:]))
+    if report['status'] != 'EMULATED_UBOOT_EFI_PUBLICATION_PASS':
+        for log in attempt.glob('*console.log'):
+            print('\n'.join(log.read_text(errors='replace').splitlines()[-40:]))
         return 1
     return 0
 

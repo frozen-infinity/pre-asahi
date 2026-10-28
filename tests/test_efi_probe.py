@@ -50,6 +50,27 @@ class EFIProbeTests(unittest.TestCase):
                             str(Path(__file__).with_name('efi-fixup-host.c')), '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True, timeout=10)
 
+    @unittest.skipUnless(shutil.which('cc'), 'Host C compiler unavailable')
+    def test_publication_consumption_rollback_and_retained_buffer_on_failure(self):
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name)
+            # Valid small FDT assembled independently of dtc for service-substitute tests.
+            value = b'efi-publication-v1\0'
+            structure = struct.pack('>II', 1, 0) + struct.pack('>III', 3, len(value), 0)
+            structure += value + bytes((-len(value)) % 4) + struct.pack('>II', 2, 9)
+            strings = b'pre-asahi,test-cookie\0'
+            data = struct.pack('>10I', 0xd00dfeed, 56 + len(structure) + len(strings),
+                               56, 56 + len(structure), 40, 17, 16, 0, len(strings), len(structure))
+            data += bytes(16) + structure + strings
+            (directory / 'synthetic-fdt.h').write_text(
+                'static const U8 fixture[] = {' + ','.join(str(b) for b in data) + '};\n')
+            binary = directory / 'publication-host'
+            root = Path(__file__).resolve().parents[1]
+            subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-I', name,
+                            str(root / 'tests/efi-publication-host.c'), str(root / 'efi/table-consumer.c'),
+                            '-o', str(binary)], check=True)
+            subprocess.run([str(binary)], check=True, timeout=10)
+
 
 if __name__ == '__main__':
     unittest.main()
