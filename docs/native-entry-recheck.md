@@ -121,7 +121,8 @@ Mac or qualify native boot.
 
 ## Your steps
 
-Review and merge the parser-fix PR after **Native-entry probe checks** passes.
+The parser fix is merged. Current development is the
+[proxy-only Stage 1 candidate and concrete storage boundary](first-native-stage.md).
 No repeat probe is currently needed: the real Mac/T7 check succeeded. For a later
 read-only recheck in an updated pre-asahi clone on the Mac:
 
