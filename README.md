@@ -38,15 +38,15 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 
 ## Your steps now
 
-The next PR calls the real selected-source U-Boot EFI DT Fixup service in QEMU.
-It checks bounded buffer negotiation, invalid input rejection, and APPLY-only
-success using a private synthetic tree. This does not exercise the J713 board
-hook or boot Linux. See [the Fixup test](docs/efi-fixup-test.md).
+The APPLY-only EFI Fixup test passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40657157665).
+The next PR adds temporary EFI device-tree publication, a separately compiled
+consumer in the same app, and verified restoration before buffer cleanup. Both
+APPLY and publication must pass in QEMU. This does not launch Linux or run the
+J713 board hook. See [the publication test](docs/efi-publication-test.md).
 
 1. Review and merge the PR after its **Selected-source U-Boot EFI probe** check passes.
 2. No download, Mac startup change or T7 preparation is needed for this check.
 3. Optional on an equipped Linux cross-build host: `python3 scripts/uboot_efi_probe.py`.
-
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.

@@ -1,5 +1,6 @@
 /dts-v1/;
 / {
     compatible = "linux,dummy-virt";
+    pre-asahi,test-cookie = "efi-publication-v1";
     chosen {};
 };

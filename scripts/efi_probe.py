@@ -26,15 +26,15 @@ def validate_pe(data):
         raise ValueError('Expected PE32+ EFI application subsystem')
 
 
-def build(clang, linker, fixup=False):
+def build(clang, linker, fixup=False, publication=False):
     directory = bringup.WORK / 'efi-probe'
     directory.mkdir(parents=True, exist_ok=True)
     attempt = Path(tempfile.mkdtemp(prefix='attempt-', dir=directory))
     obj = attempt / 'probe.obj'
     image = attempt / 'pre-asahi-probe.efi'
-    source = bringup.ROOT / ('efi/fixup.c' if fixup else 'efi/probe.c')
+    source = bringup.ROOT / ('efi/publication.c' if publication else 'efi/fixup.c' if fixup else 'efi/probe.c')
     fixture = bringup.ROOT / 'efi/synthetic-test.dts'
-    if fixup:
+    if fixup or publication:
         dtb = attempt / 'synthetic.dtb'
         bringup.run(['dtc', '-I', 'dts', '-O', 'dtb', '-o', dtb, fixture])
         data = dtb.read_bytes()
@@ -43,13 +43,23 @@ def build(clang, linker, fixup=False):
         (attempt / 'synthetic-fdt.h').write_text('static const U8 fixture[] = {' + ','.join(str(b) for b in data) + '};\n')
     bringup.run([clang, '--target=aarch64-pc-windows-msvc', '-ffreestanding', '-fno-builtin',
                  '-fno-stack-protector', '-O2', '-Wall', '-Wextra', '-Werror', '-I', attempt, '-c', source, '-o', obj])
+    objects = [obj]
+    sources = [source, bringup.ROOT / 'efi/probe.c', bringup.ROOT / 'efi/abi.h']
+    if publication:
+        consumer = bringup.ROOT / 'efi/table-consumer.c'
+        consumer_obj = attempt / 'consumer.obj'
+        bringup.run([clang, '--target=aarch64-pc-windows-msvc', '-ffreestanding', '-fno-builtin',
+                     '-fno-stack-protector', '-O2', '-Wall', '-Wextra', '-Werror', '-c', consumer, '-o', consumer_obj])
+        objects.append(consumer_obj)
+        sources.extend([consumer, bringup.ROOT / 'efi/table-consumer.h'])
     bringup.run([linker, '/subsystem:efi_application', '/entry:efi_main', '/nodefaultlib',
-                 '/machine:arm64', '/timestamp:0', '/out:' + str(image), str(obj)])
+                 '/machine:arm64', '/timestamp:0', '/out:' + str(image)] + objects)
     validate_pe(image.read_bytes())
-    return attempt, image, {'source_sha256': sha256(source), 'efi_sha256': sha256(image),
+    return attempt, image, {'source_closure_sha256': {str(p.relative_to(bringup.ROOT)): sha256(p) for p in sources},
+                            'source_sha256': sha256(source), 'efi_sha256': sha256(image),
                             'shared_source_sha256': sha256(bringup.ROOT / 'efi/probe.c'),
-                            'fixture_sha256': sha256(fixture) if fixup else None,
-                            'compiled_fixture_sha256': sha256(attempt / 'synthetic.dtb') if fixup else None,
+                            'fixture_sha256': sha256(fixture) if fixup or publication else None,
+                            'compiled_fixture_sha256': sha256(attempt / 'synthetic.dtb') if fixup or publication else None,
                             'clang': bringup.capture([clang, '--version']).splitlines()[0],
                             'linker': bringup.capture([linker, '--version']).splitlines()[0]}
 

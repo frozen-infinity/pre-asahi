@@ -1,5 +1,9 @@
 # Real EFI Fixup call in selected U-Boot/QEMU
 
+This APPLY milestone passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40657157665).
+The current wrapper also requires the subsequent [publication test](efi-publication-test.md);
+the APPLY result remains recorded separately.
+
 The previous test discovered the selected U-Boot's EFI DT Fixup protocol. This
 step invokes its four-argument callback from an actual ARM64 EFI application.
 The source pin is unchanged: `7680260272f3612a13f0c9a6c7bfbc5e9ba7ce8c`.
