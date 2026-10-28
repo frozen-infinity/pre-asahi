@@ -2,15 +2,19 @@
 
 An experimental, AI-assisted project aiming for native Linux support on Apple M4 devices, starting with the M4 MacBook Air and eventual Arch Linux ARM desktop support.
 
-Independent experimental scaffold, checked 2026-10-25. This is not an installer, an official Arch/Asahi project, or a working desktop port. No hardware boot has been performed.
+Independent experimental scaffold, checked 2026-10-28. This is not an installer, an official Arch/Asahi project, or a working desktop port. No hardware boot has been performed.
 
-## Current result: emulated PID 1 passed
+## Current result: Linux EFI handoff passed in QEMU
 
-The existing 16 KiB kernel and diagnostic initramfs passed the user's full-system QEMU virt check with matching artifact hashes. See [the milestone and native-source review](docs/emulated-milestone.md). Build/emulation preparation is complete; native entry, firmware, loader SMP/idle behavior, logging and recovery remain unresolved. The next build-only step is described below.
+The exact saved 16 KiB kernel reached PID 1 through real U-Boot EFI services and
+consumed the privately published device tree in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40664853833).
+The unpublished-tree control reached PID 1 and was rejected as intended. This is
+emulated evidence; native M4 boot has not been performed. The immediate focus is
+[physical first entry and diagnostics](docs/native-entry-recheck.md).
 
 ## Current native-work scope
 
-The user wants to avoid risky operations. Necessary Mac-side testing is authorized toward native Linux. Target installation, T7 erasure and boot-policy changes still require a concrete reviewed procedure; native entry and logging remain unverified. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
+The user wants to avoid risky operations. Necessary Mac-side testing is authorized toward native Linux. Target installation, T7 erasure and boot-policy changes still require a concrete reviewed procedure; native entry and logging remain unverified. The [current native-entry recheck](docs/native-entry-recheck.md) corrects the older downstream assessment and records a new read-only Mac probe. The [historical source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
 
 ## Implementation direction toward a working system
 
@@ -38,16 +42,19 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 
 ## Your steps now
 
-EFI Fixup and temporary table publication passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40658293937).
-The next PR launches the exact saved kernel through real EFI LoadImage/StartImage
-in QEMU. A RAM-only PID 1 must read a fresh cookie from the published tree; a
-control that skips publication must reach PID 1 and reject the original tree.
-See [the Linux EFI consumer test](docs/linux-efi-consumer.md). This remains
-emulation; native M4 boot is unproven.
+Read [the native-entry recheck](docs/native-entry-recheck.md). An experimental
+downstream now reports native desktop installations on the exact J713 model;
+our earlier "historical research only" description was stale. Its documented
+installer uses the internal SSD and specific paired firmware. This does not
+qualify our stack or a T7-only entry route.
 
-1. Review the PR after **Linux EFI consumer on QEMU** and **Selected-source U-Boot EFI probe** pass; mark ready and merge when satisfied.
-2. No new download, Mac startup change or T7 preparation is needed.
-3. Optional Linux-host reproduction: `python3 scripts/uboot_efi_probe.py --linux-kernel-zip /path/to/saved-kernel.zip`.
+1. Review the new probe/source-review PR and merge after **Native-entry probe checks** passes.
+2. Connect the T7 in macOS without changing its format or contents.
+3. Run `python3 scripts/macos_boot_context.py` in your updated pre-asahi clone and share only its filtered JSON. A real probe already ran without an external disk visible; there is no need to repeat it without the T7.
+
+No installer, startup-setting change, Recovery visit or kernel rebuild is
+requested. Necessary Mac-side testing remains authorized as the technical entry
+and recovery procedure becomes concrete.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.
@@ -159,7 +166,7 @@ If the BusyBox QEMU `--list` check exits 127, see [the retry steps](docs/diagnos
 
 ## Build artifacts prepared; first-boot path remains unverified
 
-The user has reported successful kernel/j713 DTB, m1n1 and static BusyBox/initramfs builds, including QEMU userspace smoke checks. These complete artifact preparation, not native boot proof. Read [the boot-entry review](docs/boot-gate-review.md) before any hardware action. The next step is a filtered read-only macOS firmware report and confirming whether a boot entry already exists. No installer bypass, disk formatting or startup-security change is proposed.
+The user has reported successful kernel/j713 DTB, m1n1 and static BusyBox/initramfs builds, including QEMU userspace smoke checks. These complete artifact preparation, not native boot proof. Read [the boot-entry review](docs/boot-gate-review.md) before any hardware action. Boot history is confirmed: the Mac has only run macOS. The current next step is the targeted [native-entry recheck and T7 context probe](docs/native-entry-recheck.md). No installer bypass, disk formatting or startup-security change is proposed.
 
 ## Next independent check: emulated kernel-to-PID1 boot
 

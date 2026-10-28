@@ -1,5 +1,10 @@
 # Native provisioning design: source findings and current limits
 
+Historical 2026-10-26 review. Its blanket software-only scope is superseded by
+the user's 2026-10-27 Mac-testing authorization and the [2026-10-28 native-entry
+recheck](native-entry-recheck.md). Follow that current review for next steps.
+Earlier source findings below retain their original pins and evidence limits.
+
 Review date: 2026-10-26. Target: j713/T8132. Source pins remain m1n1 `51b747dced07a58eacf5dabc31ed6f00bcfa20fd` and Linux `94fb23346d522edf53722357c426a3e58030beea`.
 
 The user can potentially borrow a modern Mac for recovery but strongly prefers to avoid risky operations. Current work therefore remains source analysis, read-only identification and build-host/emulator tooling. No T7 erase, external macOS installation, security-policy change, custom boot-object installation or native experiment is requested. Earlier permission to wipe the T7 is not an instruction to do so now.

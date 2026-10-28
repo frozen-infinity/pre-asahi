@@ -1,0 +1,26 @@
+name: Native-entry probe checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/native-entry.yml'
+      - 'scripts/macos_boot_context.py'
+      - 'tests/test_macos_boot_context.py'
+      - 'configs/native-entry-references.json'
+      - 'configs/candidate-stack.json'
+      - 'docs/native-entry-recheck.md'
+
+permissions:
+  contents: read
+
+jobs:
+  portable-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Test privacy filtering and read-only command selection with substitutes
+        run: python3 -m unittest discover -s tests -v
