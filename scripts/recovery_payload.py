@@ -120,7 +120,7 @@ def attached_device(image):
     return entities[0]['dev-entry']
 
 
-def validate(attempt):
+def validate(attempt, inspect_contents=False):
     metadata.require(platform.system() == 'Darwin' and platform.machine() == 'arm64',
                      'Native macOS ARM64 is required for recovery decoding and inspection')
     metadata.require(shutil.disk_usage(attempt).free >= 5 * 1024**3, 'Need at least 5 GiB scratch space')
@@ -128,6 +128,17 @@ def validate(attempt):
     print('Encrypted recovery hash verified', flush=True)
     image = decode(attempt, encrypted)
     print('Decoded recovery hash and image integrity verified', flush=True)
+    if not inspect_contents:
+        result = {'status': 'J713_RECOVERY_HASH_AND_IMAGE_VERIFY_ONLY_PASS',
+                  'encrypted_sha256': ENCRYPTED_SHA, 'decoded_sha256': DECODED_SHA,
+                  'contents_inspected': False, 'recovery_mounted': False,
+                  'installer_executed': False, 'boot_policy_changed': False,
+                  'native_entry_qualified': False, 'native_boot_proven': False,
+                  'note': 'Hashes and disk-image checksum only. Content inspection previously '
+                          'stalled on the development Mac and remains unqualified.'}
+        (attempt / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+        print(json.dumps(result, indent=2))
+        return
     mount = attempt / 'mount'
     mount.mkdir(exist_ok=False)
     # A mounted filesystem can stall a file read; keep inspection in a child
@@ -157,7 +168,7 @@ def validate(attempt):
         # path must not be consulted to choose an eject target.
         device = attached_device(image)
         if device:
-            detached = subprocess.run(['/usr/bin/hdiutil', 'detach', device],
+            detached = subprocess.run(['/usr/sbin/diskutil', 'eject', device],
                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
             if detached.returncode:
                 raise RuntimeError('Read-only image detach failed; inspect this scratch image before retrying')
@@ -183,6 +194,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--attempt', type=Path,
                         help='Reuse an existing scratch directory after checking every cached image hash')
+    parser.add_argument('--inspect-contents', action='store_true',
+                        help='Optional read-only mount test; this stalled on the development Mac. Not required for hash-only staging.')
     args = parser.parse_args()
     parent = ROOT / 'work/recovery-payload'
     parent.mkdir(parents=True, exist_ok=True)
@@ -190,7 +203,7 @@ def main():
     metadata.require(attempt.parent == parent.resolve() and attempt.is_dir() and not attempt.is_symlink(),
                      'Attempt must be an existing direct child of the project recovery scratch directory')
     print('Recovery scratch: ' + str(attempt), flush=True)
-    validate(attempt)
+    validate(attempt, args.inspect_contents)
 
 
 if __name__ == '__main__':

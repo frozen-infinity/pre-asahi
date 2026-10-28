@@ -36,9 +36,15 @@ The Apple archive is the exact 26.5.1 / 25F80 J713 restore profile, with
 Mac16,12, chip 0x8132 and board 0x2C verified separately in its metadata.
 `scripts/recovery_payload.py` stages only its 1,140,850,688-byte encrypted member,
 checks its pinned SHA-256, decrypts with native macOS `aea`, checks the decoded
-SHA-256, and runs `hdiutil verify`. It then attempts read-only mounting and checks
-the version and required recovery tools without executing them. An attachment
-failure must remain a failed inspection, even when both image hashes pass.
+SHA-256, and runs `hdiutil verify`. This actual Mac-side test passed. The attempted
+read-only mount attached, but content reads stalled. The test processes were
+stopped, the specific virtual image was ejected, and the image inventory was
+checked to confirm zero task-created images remained attached. No content-
+inspection pass is claimed. Default staging now stops after hash/image
+verification; `--inspect-contents` is an optional, explicitly labeled test with
+bounded child reads and image-specific eject cleanup. Do not repeat it on this
+Mac as an assumed successful preflight. An attachment/content failure remains
+a failed inspection even when both image hashes pass.
 The scratch files are ordinary local files; they are not placed on the T7.
 
 Hashes from the exact reviewed downstream J713 patch:

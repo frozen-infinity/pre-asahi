@@ -5,6 +5,7 @@ import plistlib
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import first_entry_kit
 import ram_shell
@@ -13,6 +14,21 @@ import first_entry_plan
 
 
 class FirstEntryContracts(unittest.TestCase):
+    def test_default_recovery_validation_does_not_mount(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            with patch.object(recovery_payload.platform, 'system', return_value='Darwin'), \
+                 patch.object(recovery_payload.platform, 'machine', return_value='arm64'), \
+                 patch.object(recovery_payload.shutil, 'disk_usage', return_value=type('Space', (), {'free': 8 * 1024**3})()), \
+                 patch.object(recovery_payload, 'download', return_value=root / 'verified.aea'), \
+                 patch.object(recovery_payload, 'decode', return_value=root / 'verified.dmg'), \
+                 patch.object(recovery_payload.subprocess, 'run', side_effect=AssertionError('Must not mount')):
+                recovery_payload.validate(root)
+            result = json.loads((root / 'result.json').read_text())
+            self.assertEqual(result['status'], 'J713_RECOVERY_HASH_AND_IMAGE_VERIFY_ONLY_PASS')
+            self.assertFalse(result['recovery_mounted'])
+            self.assertFalse(result['native_entry_qualified'])
+
     def test_storage_limit_and_normal_reserve_are_independent(self):
         blocked = first_entry_plan.storage_plan(245107195904, 31242539008, 245107195904)
         self.assertFalse(blocked['apfs_limit_allows_stub_shrink'])
