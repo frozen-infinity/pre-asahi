@@ -42,9 +42,22 @@ class BootContextTests(unittest.TestCase):
         for bad in [{'Internal':True,'Whole':True},{'Internal':False,'Whole':False},None]:
             with self.assertRaises(ValueError):probe.external_summary(bad,1)
 
+    def test_current_diskutil_whole_disk_key(self):
+        result=probe.external_summary({'Internal':False,'WholeDisk':True,
+            'MediaName':'Samsung PSSD T7 Media','TotalSize':1000204886016,'BusProtocol':'USB'},1)
+        self.assertTrue(result['t7_name_match'])
+        self.assertEqual(result['bytes'],1000204886016)
+
+    def test_conflicting_or_unknown_whole_disk_flags_are_refused(self):
+        for fields in [{'WholeDisk':True,'Whole':False},{'WholeDisk':'yes'},
+                       {'WholeDisk':False},{}]:
+            with self.assertRaises(ValueError):
+                probe.external_summary(dict(Internal=False,**fields),1)
+
     def test_missing_queries_never_imply_qualification_or_zero_devices(self):
         result=probe.collect(lambda *a:(None,'unavailable'))
         self.assertIsNone(result['currently_running_os_boot_context'])
+        self.assertIsNone(result['external_storage_observation']['listed_device_count'])
         self.assertEqual(result['query_status']['external_storage'],'unavailable')
         self.assertFalse(result['native_entry_qualified'])
         self.assertFalse(result['native_boot_proven'])
@@ -67,6 +80,25 @@ class BootContextTests(unittest.TestCase):
         self.assertEqual(result['query_status']['external_storage'],'unavailable')
         self.assertFalse(any('PRIVATE_COMMAND' in str(c) for c in calls))
         self.assertTrue(all(c[0] in ['/usr/sbin/ioreg','/usr/sbin/sysctl','/usr/bin/sw_vers','/usr/sbin/diskutil'] for c in calls))
+        self.assertFalse(result['native_entry_qualified'])
+
+    def test_partial_report_distinguishes_query_failure_from_absence(self):
+        def fake(command,plist=False):
+            if command[-1]=='physical':
+                return {'AllDisksAndPartitions':[{'DeviceIdentifier':'disk4'}, {'DeviceIdentifier':'disk5'}]},'ok'
+            if command[-1]=='disk4':return None,'unavailable'
+            if command[-1]=='disk5':return {'Internal':False,'WholeDisk':True,
+                'MediaName':'Samsung T7 PRIVATE_LABEL','TotalSize':1000000000000,'BusProtocol':'USB'},'ok'
+            return None,'unavailable'
+        result=probe.collect(fake)
+        observation=result['external_storage_observation']
+        self.assertEqual(observation['listed_device_count'],2)
+        self.assertEqual(observation['described_device_count'],1)
+        self.assertEqual(observation['diagnostics'],[{'external_index':1,'reason':'info_query_unavailable'}])
+        self.assertEqual(result['external_physical_devices'][0]['external_index'],2)
+        self.assertEqual(result['query_status']['external_storage'],'partial')
+        self.assertNotIn('PRIVATE',json.dumps(result))
+        self.assertNotIn('disk5',json.dumps(result))
         self.assertFalse(result['native_entry_qualified'])
 
     def test_pin_change_stops_before_queries(self):

@@ -48,9 +48,14 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-1. Review the new probe/source-review PR and merge after **Native-entry probe checks** passes.
-2. Connect the T7 in macOS without changing its format or contents.
-3. Run `python3 scripts/macos_boot_context.py` in your updated pre-asahi clone and share only its filtered JSON. A real probe already ran without an external disk visible; there is no need to repeat it without the T7.
+The follow-up parser fix reads macOS's `WholeDisk` flag correctly. A real
+read-only probe now recognizes the attached 1 TB USB T7. It also reports how many
+external devices were listed/described and a filtered reason for any omission.
+`partial` never means that the T7 is absent.
+
+1. Review and merge the parser-fix PR after **Native-entry probe checks** passes.
+2. No repeat probe is currently needed; the connected Mac/T7 check succeeded.
+3. For later rechecks, use `python3 scripts/macos_boot_context.py`; share only its filtered JSON if troubleshooting is needed.
 
 No installer, startup-setting change, Recovery visit or kernel rebuild is
 requested. Necessary Mac-side testing remains authorized as the technical entry
