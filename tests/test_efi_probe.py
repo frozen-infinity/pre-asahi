@@ -37,6 +37,19 @@ class EFIProbeTests(unittest.TestCase):
             result = subprocess.run([str(binary)], capture_output=True, text=True, check=True, timeout=10)
             self.assertEqual(result.stdout, 'EFI_PROBE_HOST_BRANCHES_PASS\n')
 
+    @unittest.skipUnless(shutil.which('cc'), 'Host C compiler unavailable')
+    def test_fixup_negotiation_failure_bounds_and_cleanup(self):
+        with tempfile.TemporaryDirectory() as name:
+            directory = Path(name)
+            # Host mock does not parse FDT; actual ARM64 build uses dtc's full fixture.
+            data = bytes.fromhex('d00dfeed00000028') + bytes(32)
+            (directory / 'synthetic-fdt.h').write_text(
+                'static const U8 fixture[] = {' + ','.join(str(b) for b in data) + '};\n')
+            binary = directory / 'fixup-host'
+            subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror', '-I', name,
+                            str(Path(__file__).with_name('efi-fixup-host.c')), '-o', str(binary)], check=True)
+            subprocess.run([str(binary)], check=True, timeout=10)
+
 
 if __name__ == '__main__':
     unittest.main()

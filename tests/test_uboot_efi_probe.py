@@ -10,6 +10,10 @@ class UBootEFIResultTests(unittest.TestCase):
     def test_missing_or_refused_protocol_cannot_pass(self):
         valid = 'U-Boot 2026.07\nPRE_ASAHI_EFI_PROBE_STARTED\nPRE_ASAHI_DT_FIXUP_AVAILABLE\nPRE_ASAHI_NO_LINUX_LAUNCH\n'
         self.assertTrue(probe.accepted(valid))
+        self.assertFalse(probe.accepted(valid, fixup=True))
+        complete = valid + 'PRE_ASAHI_BUFFER_NEGOTIATED\nPRE_ASAHI_INVALID_INPUT_REJECTED\nPRE_ASAHI_FIXUP_APPLY_PASS\n'
+        self.assertTrue(probe.accepted(complete, fixup=True))
+        self.assertFalse(probe.accepted(complete + 'PRE_ASAHI_FIXUP_FAILED', fixup=True))
         for invalid in [valid.replace('U-Boot ', ''), valid.replace('PRE_ASAHI_DT_FIXUP_AVAILABLE', 'PRE_ASAHI_DT_FIXUP_ABSENT'),
                         valid + 'PRE_ASAHI_DT_FIXUP_LOOKUP_ERROR\n', valid.replace('PRE_ASAHI_EFI_PROBE_STARTED', '')]:
             self.assertFalse(probe.accepted(invalid))
