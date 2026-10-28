@@ -42,7 +42,9 @@ STATUS efi_main(void *image, SYSTEM *system)
         return ERROR(3);
     }
     say(system, "PRE_ASAHI_DT_FIXUP_AVAILABLE");
+#ifndef PRE_ASAHI_LAUNCH_TEST
     say(system, "PRE_ASAHI_NO_LINUX_LAUNCH");
+#endif
     /* Discovery only: do not call Fixup, install tables, or start another image. */
     return 0;
 }

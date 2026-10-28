@@ -1,0 +1,66 @@
+name: Linux EFI consumer on QEMU
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/linux-efi.yml'
+      - 'scripts/linux_efi.py'
+      - 'ci/qemu-efi-pid1.c'
+      - 'tests/test_linux_efi.py'
+      - 'configs/artifact-set.json'
+      - 'configs/candidate-stack.json'
+      - 'scripts/uboot_efi_probe.py'
+      - 'tests/test_uboot_efi_probe.py'
+      - 'tests/test_efi_probe.py'
+      - 'tests/efi-*-host.c'
+      - 'efi/**'
+      - 'scripts/efi_probe.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  linux-efi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests -v
+      - name: Install cross-build and emulator tools on disposable runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential git bc bison flex \
+            python3 python3-dev python3-pyelftools python3-setuptools swig pkg-config \
+            libssl-dev libgnutls28-dev uuid-dev device-tree-compiler \
+            gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu libc6-dev-arm64-cross clang lld qemu-system-arm
+      - name: Download exact prior kernel artifact (no kernel rebuild)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p work
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12719093458/zip" > work/efi-kernel.zip
+      - name: Build pinned U-Boot and launch the saved Linux kernel through EFI
+        run: |
+          set -o pipefail
+          python3 scripts/uboot_efi_probe.py --linux-kernel-zip work/efi-kernel.zip 2>&1 | tee uboot-efi-runner.log
+      - name: Retain emulation evidence and own EFI executable
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: QEMU-ONLY-linux-efi-consumer
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            uboot-efi-runner.log
+            work/uboot-efi-probe/attempt-*/result.json
+            work/uboot-efi-probe/attempt-*/*console.log
+            work/uboot-efi-probe/attempt-*/qemu-resolved.config
+            work/uboot-efi-probe/attempt-*/*.efi
+            work/uboot-efi-probe/attempt-*/linux-efi/result.json
+            work/uboot-efi-probe/attempt-*/linux-efi/*console.log
+            work/uboot-efi-probe/attempt-*/linux-efi/*.efi
+            work/uboot-efi-probe/attempt-*/linux-efi/*.dtb

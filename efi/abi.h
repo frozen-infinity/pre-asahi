@@ -10,7 +10,23 @@ typedef struct { U32 a; U16 b, c; U8 d[8]; } GUID;
 typedef struct { U64 signature; U32 revision, size, crc, reserved; } HEADER;
 typedef struct TEXT TEXT;
 struct TEXT { void *reset; STATUS (*output)(TEXT *, U16 *); };
-typedef struct { HEADER header; void *unused_before_pool[5]; STATUS (*allocate)(U32, UINTN, void **); STATUS (*release)(void *); void *unused_before_install[14]; STATUS (*install_table)(GUID *, void *); void *unused_after_install[15]; STATUS (*locate)(GUID *, void *, void **); } BOOT;
+typedef struct {
+    HEADER header;
+    void *unused_before_pool[5];
+    STATUS (*allocate)(U32, UINTN, void **);
+    STATUS (*release)(void *);
+    void *unused_before_handle[9];
+    STATUS (*handle_protocol)(void *, GUID *, void **);
+    void *unused_before_install[4];
+    STATUS (*install_table)(GUID *, void *);
+    STATUS (*load_image)(U8, void *, void *, void *, UINTN, void **);
+    STATUS (*start_image)(void *, UINTN *, U16 **);
+    void *exit_image;
+    STATUS (*unload_image)(void *);
+    void *unused_before_locate[11];
+    STATUS (*locate)(GUID *, void *, void **);
+} BOOT;
+
 typedef struct {
     HEADER header;
     U16 *vendor;
@@ -33,4 +49,8 @@ _Static_assert(__builtin_offsetof(BOOT, locate) == 320, "EFI LocateProtocol offs
 
 _Static_assert(__builtin_offsetof(BOOT, install_table) == 192, "EFI InstallConfigurationTable offset");
 
+_Static_assert(__builtin_offsetof(BOOT, handle_protocol) == 152, "EFI HandleProtocol offset");
+_Static_assert(__builtin_offsetof(BOOT, load_image) == 200, "EFI LoadImage offset");
+_Static_assert(__builtin_offsetof(BOOT, start_image) == 208, "EFI StartImage offset");
+_Static_assert(__builtin_offsetof(BOOT, unload_image) == 224, "EFI UnloadImage offset");
 #endif

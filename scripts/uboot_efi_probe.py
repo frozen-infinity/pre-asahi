@@ -137,20 +137,30 @@ def run(args):
         publication_image = attempt / 'pre-asahi-publication.efi'
         shutil.copyfile(built_publication, publication_image)
         publication_observation = emulate(attempt, firmware, publication_image, args.qemu, publication=True)
-    report = {'status': publication_observation['status'], 'uboot_commit': pins['uboot_commit'],
+    linux_report = None
+    overall = publication_observation['status']
+    if args.linux_kernel_zip and overall == 'EMULATED_UBOOT_EFI_PUBLICATION_PASS':
+        import linux_efi
+        passed, linux_report = linux_efi.run(attempt, firmware, args.linux_kernel_zip, args)
+        overall = linux_report['status']
+    report = {'status': overall, 'uboot_commit': pins['uboot_commit'],
               'target': 'qemu_arm64_defconfig + explicit test overlay',
               'uboot_sha256': sha256(firmware), 'config_sha256': sha256(config),
               'cross_compiler': bringup.capture([args.cross_compile + 'gcc', '--version']).splitlines()[0],
               'efi_probe': compiler, 'emulation': observation,
-              'publication_probe': publication_compiler, 'publication_emulation': publication_observation,
+              'linux_efi': linux_report, 'publication_probe': publication_compiler, 'publication_emulation': publication_observation,
               'apple_build_executed': False, 'j713_board_hook_executed': False,
               'native_boot_proven': False, 'fixup_apply_passed': observation['status'] == 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS',
-              'configuration_table_publication_passed': publication_observation['status'] == 'EMULATED_UBOOT_EFI_PUBLICATION_PASS', 'linux_launched': False,
+              'configuration_table_publication_passed': publication_observation['status'] == 'EMULATED_UBOOT_EFI_PUBLICATION_PASS', 'linux_launched': (True if linux_report and any(
+                  x['status'] in ['LINUX_EFI_PID1_PASS', 'CONTROL_REJECTED_AT_PID1']
+                  for x in linux_report['observations'].values()) else None if args.linux_kernel_zip else False),
+              'linux_efi_consumer_passed': overall == 'EMULATED_LINUX_EFI_CONSUMER_PASS',
               'note': 'Real selected-source U-Boot EFI services on QEMU generic ARM64; Apple hardware/configuration excluded.'}
     bringup.save(attempt / 'result.json', report)
     print(json.dumps(report, indent=2))
     print('U-Boot EFI test files: ' + str(attempt))
-    if report['status'] != 'EMULATED_UBOOT_EFI_PUBLICATION_PASS':
+    expected = 'EMULATED_LINUX_EFI_CONSUMER_PASS' if args.linux_kernel_zip else 'EMULATED_UBOOT_EFI_PUBLICATION_PASS'
+    if report['status'] != expected:
         for log in attempt.glob('*console.log'):
             print('\n'.join(log.read_text(errors='replace').splitlines()[-40:]))
         return 1
@@ -159,6 +169,7 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--linux-kernel-zip', type=Path, help='Opt-in: exact saved kernel ZIP for QEMU EFI/PID1 test')
     parser.add_argument('--cross-compile', default='aarch64-linux-gnu-')
     parser.add_argument('--clang', default='clang')
     parser.add_argument('--linker', default='lld-link')
