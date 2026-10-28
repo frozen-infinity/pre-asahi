@@ -48,21 +48,19 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The Mac/T7 identification check now succeeds. The next candidate is a separate
-[proxy-only Stage 1 build](docs/first-native-stage.md): visible console, no ESP
-chainload, no appended Linux payload, and NO_DISPLAY passed as an actual compiler
-flag. It preserves the selected Aura source and existing successful artifacts.
-The storage/recovery review also records why external boot can still write
-internal metadata and why the reviewed installer cannot independently select an
-internal stub and external rootfs.
+The Mac/T7 identification check and the separate [proxy-only Stage 1
+build](docs/first-native-stage.md) pass. The next dependency is its paired
+recovery and a separate OS identity. A new [actual Apple archive metadata
+check](docs/paired-recovery.md) confirms the J713/board/chip identity and 26.5.1 /
+25F80 recovery member using about 1.5 MB of ranged metadata reads. It does not
+validate or install the recovery payload, or qualify the newer macOS host.
 
-1. Review the PR after **Stage-1 proxy-only build** passes; mark ready and merge when satisfied.
-2. No repeat probe, T7 preparation, boot-object installation or kernel rebuild is needed.
-3. CI retains build-review evidence only; do not install a candidate based on compilation success.
+1. Review the PR after **Apple paired-recovery metadata** passes, then merge when satisfied.
+2. No new downloads, Mac probes, Recovery visits, T7 changes or kernel rebuilds are needed.
+3. Next technical work is validation of the actual paired recovery image before developing a complete stub-only enrollment profile.
 
-No installer, startup-setting change, Recovery visit or kernel rebuild is
-requested. Necessary Mac-side testing remains authorized as the technical entry
-and recovery procedure becomes concrete.
+No boot-object installation or startup-setting change is requested. Necessary
+Mac-side testing remains authorized as entry and recovery become concrete.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.
@@ -132,6 +130,7 @@ python3 -m unittest discover -s tests -v
 These commands create an ordinary project folder and local reports; no administrator access is required. You can clone in an existing mounted T7 folder if desired; see the filesystem notes in the T7 plan. You can also run these preparation checks with the T7 disconnected.
 
 Review `reports/hardware.json` and `reports/doctor.json`. Report the model/board, macOS build, missing tools, and test result in the chat. Also say whether a second development computer is available, which T7 variant/capacity you have, and whether it contains data to preserve. Do not post serial numbers, UUIDs, full disk/IORegistry dumps, or unreviewed logs. No hardware boot is requested yet.
+
 
 ## Local checks (writes only local project files)
 
