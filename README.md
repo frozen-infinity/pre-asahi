@@ -48,90 +48,19 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The Mac/T7 identification check now succeeds. The next candidate is a separate
-[proxy-only Stage 1 build](docs/first-native-stage.md): visible console, no ESP
-chainload, no appended Linux payload, and NO_DISPLAY passed as an actual compiler
-flag. It preserves the selected Aura source and existing successful artifacts.
-The storage/recovery review also records why external boot can still write
-internal metadata and why the reviewed installer cannot independently select an
-internal stub and external rootfs.
+The Mac/T7 identification check and the separate [proxy-only Stage 1
+build](docs/first-native-stage.md) pass. The next dependency is its paired
+recovery and a separate OS identity. A new [actual Apple archive metadata
+check](docs/paired-recovery.md) confirms the J713/board/chip identity and 26.5.1 /
+25F80 recovery member using about 1.5 MB of ranged metadata reads. It does not
+validate or install the recovery payload, or qualify the newer macOS host.
 
-1. Review the PR after **Stage-1 proxy-only build** passes; mark ready and merge when satisfied.
-2. No repeat probe, T7 preparation, boot-object installation or kernel rebuild is needed.
-3. CI retains build-review evidence only; do not install a candidate based on compilation success.
+1. Review the PR after **Apple paired-recovery metadata** passes, then merge when satisfied.
+2. No new downloads, Mac probes, Recovery visits, T7 changes or kernel rebuilds are needed.
+3. Next technical work is validation of the actual paired recovery image before developing a complete stub-only enrollment profile.
 
-No installer, startup-setting change, Recovery visit or kernel rebuild is
-requested. Necessary Mac-side testing remains authorized as the technical entry
-and recovery procedure becomes concrete.
-
-The saved Aura, kernel and U-Boot archives have now passed a combined local
-integrity/source/emulation-evidence check: **145 recorded build outputs matched**.
-See [the artifact-set review](docs/artifact-set-review.md) for the checked inputs,
-remaining handoff gates and optional command to reproduce the check.
-
-The production J713 importer also passed **56 synthetic handoff cases and five
-padding checks** locally using its pinned upstream host suite. See
-[the fixture guide](docs/j713-handoff-fixtures.md). After merging the fixture PR,
-you can reproduce this on Linux through **Actions → J713 handoff fixtures → Run
-workflow → main** and send the run link. This does not rebuild the kernel or
-U-Boot. Keep the original archives intact; no hardware action is requested.
-
-The [Linux fixture run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40500142540)
-also passed. Necessary Mac-side testing is now explicitly within scope toward
-native Linux. See [the next native-integration step](docs/native-next-step.md),
-including the saved DTB's missing opt-in marker and remaining first-entry needs.
-
-The saved OS DTB now has a separate workspace-only
-[prepared handoff candidate and importer probe](docs/prepared-os-dtb.md).
-The fixture now matches all 10 CPU identifiers from that saved DTB. Full synthetic
-import, repeat import, rejection and static-policy/reference checks passed on the
-Mac. Actual runtime handoff remains unverified.
-No rebuild is required. The guide gives an optional local reproduction command.
-
-The [EFI fixup/publication host probe](docs/efi-handoff.md) now also passes with
-the production EFI function and board hook. It checks buffer negotiation and
-publication ordering with mocked EFI services/helper; actual EFI execution and
-native first entry remain untested. No new user run is required for this result.
-
-An [actual arm64 EFI discovery application](docs/efi-discovery-probe.md) has now
-built and run under QEMU/EDK2, correctly detecting the absent U-Boot-specific
-protocol and returning without launching Linux. After merging its PR, run
-**Actions → ARM64 EFI discovery probe → Run workflow → main** and share the link
-for Linux-runner reproduction. No kernel rebuild is needed.
-
-The next [selected-source U-Boot EFI discovery test](docs/uboot-efi-discovery.md)
-cross-builds the same pinned revision for QEMU's generic ARM64 board and expects
-the protocol to be present. Its PR check runs automatically; review its result
-instead of starting another build. This does not execute the Apple binary or
-claim native M4 support.
-
-Read [the candidate build guide](docs/candidate-stack-build.md) for exact pins,
-outputs and limits. Aura packaging and kernel preparation passed in
-[the first ARM CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40401747548).
-The full kernel/modules/DTB build and candidate QEMU PID 1 test passed in
-[run 40468038656](https://github.com/frozen-infinity/pre-asahi/actions/runs/40468038656).
-Keep the downloaded archive intact. Read [the boot-chain integration guide](docs/boot-chain-integration.md)
-for the next component and remaining handoff requirements. Native boot remains
-unproven. Leave the Mac and T7 unchanged for this step.
-
-The earlier `cd: linux: No such file or directory` wrapper failure was fixed
-before the successful kernel run. No retry of that old attempt is needed.
-
-### Earlier baseline preparation
-
-From macOS Terminal, clone the development branch for this PR (after merging it, clone `main` instead):
-
-```sh
-git clone --branch phase1-scaffold-t7 https://github.com/frozen-infinity/pre-asahi.git
-cd pre-asahi
-python3 scripts/bringup.py identify
-python3 scripts/bringup.py doctor
-python3 -m unittest discover -s tests -v
-```
-
-These commands create an ordinary project folder and local reports; no administrator access is required. You can clone in an existing mounted T7 folder if desired; see the filesystem notes in the T7 plan. You can also run these preparation checks with the T7 disconnected.
-
-Review `reports/hardware.json` and `reports/doctor.json`. Report the model/board, macOS build, missing tools, and test result in the chat. Also say whether a second development computer is available, which T7 variant/capacity you have, and whether it contains data to preserve. Do not post serial numbers, UUIDs, full disk/IORegistry dumps, or unreviewed logs. No hardware boot is requested yet.
+No boot-object installation or startup-setting change is requested. Necessary
+Mac-side testing remains authorized as entry and recovery become concrete.
 
 ## Local checks (writes only local project files)
 
