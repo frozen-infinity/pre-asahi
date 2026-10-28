@@ -10,10 +10,12 @@ import linux_efi
 
 class LinuxEFIResultTests(unittest.TestCase):
     def test_requires_real_efi_pid1_cookie_and_control_rejection(self):
-        base='PRE_ASAHI_STARTING_LINUX_EFI\nEFI stub: Booting Linux Kernel\nLinux version 7.4\n[0.0] efi: EFI v2.10 by Das U-Boot\nPRE_ASAHI_LINUX_EFI_PID1_REACHED\n'
+        base='PRE_ASAHI_STARTING_LINUX_EFI\nRemapping and enabling EFI services.\nLinux version 7.4\n[0.0] efi: EFI v2.10 by Das U-Boot\nPRE_ASAHI_LINUX_EFI_PID1_REACHED\n'
         positive=base+'PRE_ASAHI_LINUX_TREE_PUBLISHED\nPRE_ASAHI_LINUX_EFI_COOKIE=nonce\nPRE_ASAHI_LINUX_EFI_FW_BITS=64\nPRE_ASAHI_LINUX_EFI_PID1_PASS\n'
+        # The pinned kernel did not emit an EFI stub console message in the real run.
+        self.assertNotIn('EFI stub:', positive)
         self.assertTrue(linux_efi.outcome(positive,'nonce'))
-        for missing in ['EFI stub:', 'efi: EFI v', 'Linux version ', 'PRE_ASAHI_LINUX_TREE_PUBLISHED',
+        for missing in ['Remapping and enabling EFI services.', 'efi: EFI v', 'Linux version ', 'PRE_ASAHI_LINUX_TREE_PUBLISHED',
                         'PRE_ASAHI_LINUX_EFI_PID1_REACHED', 'PRE_ASAHI_LINUX_EFI_FW_BITS=64']:
             self.assertFalse(linux_efi.outcome(positive.replace(missing,''),'nonce'))
         self.assertFalse(linux_efi.outcome(positive,'different'))

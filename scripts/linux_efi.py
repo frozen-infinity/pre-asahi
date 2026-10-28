@@ -90,7 +90,8 @@ def outcome(console, cookie, control=False):
     lines = console.splitlines()
     if any(x in console for x in ['Kernel panic', 'PRE_ASAHI_LINUX_EFI_RETURNED']):
         return False
-    if not (any('Linux version ' in x for x in lines) and 'EFI stub:' in console and
+    if not (any('Linux version ' in x for x in lines) and
+            'Remapping and enabling EFI services.' in console and
             any('efi: EFI v' in x for x in lines) and 'PRE_ASAHI_LINUX_EFI_PID1_REACHED' in lines and
             'PRE_ASAHI_STARTING_LINUX_EFI' in lines):
         return False
@@ -131,6 +132,9 @@ def emulate(attempt, firmware, image, initrd, dtb, app, qemu, cookie, control):
                         first = time.monotonic()
                     if time.monotonic() - first >= 2:
                         status = 'CONTROL_REJECTED_AT_PID1' if control else 'LINUX_EFI_PID1_PASS'; break
+                if not outcome(console, cookie, control) and any(marker in console.splitlines() for marker in
+                        ['PRE_ASAHI_LINUX_EFI_PID1_PASS', 'PRE_ASAHI_LINUX_EFI_PID1_REJECTED']):
+                    status = 'INCOMPLETE_EFI_EVIDENCE'; break
                 if 'Kernel panic' in console or 'PRE_ASAHI_LINUX_EFI_RETURNED' in console:
                     status = 'GUEST_FAILED'; break
                 if not control and 'PRE_ASAHI_LINUX_EFI_PID1_REJECTED' in console:
@@ -150,11 +154,14 @@ def emulate(attempt, firmware, image, initrd, dtb, app, qemu, cookie, control):
                 except subprocess.TimeoutExpired:
                     process.kill(); process.wait()
             process.stdin.close()
+    console = log.read_text(errors='replace')
     result = {'status': status, 'console_sha256': sha256(log),
+              'efi_stub_console_line_observed': 'EFI stub:' in console,
               'elapsed_seconds': round(time.monotonic() - start, 2), 'command': command.rstrip(),
               'qemu_command': args}
     if status not in ['CONTROL_REJECTED_AT_PID1', 'LINUX_EFI_PID1_PASS']:
-        print('\n'.join(log.read_text(errors='replace').splitlines()[-60:]))
+        lines = console.splitlines()
+        print('\n'.join(lines[:40] + ['[... console middle omitted ...]'] + lines[-60:]))
     return result
 
 

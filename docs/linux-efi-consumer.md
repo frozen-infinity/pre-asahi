@@ -34,7 +34,11 @@ seconds of accepted evidence; no reboot, storage or network action is requested.
 
 ## Results and limits
 
-Overall acceptance is `EMULATED_LINUX_EFI_CONSUMER_PASS`. The report binds source,
+Overall acceptance is `EMULATED_LINUX_EFI_CONSUMER_PASS`. Require the kernel's
+EFI firmware banner and runtime-service remapping message, plus the launcher
+and PID 1 evidence. The pinned kernel did not emit an `EFI stub:` console line
+in the first real run, even though both guests reached PID 1 and EFI was active;
+that optional message is recorded but is not a pass requirement. The report binds source,
 generated headers, kernel, config, firmware, DTBs, initramfs, applications and
 console hashes; it records positive and control results separately. This is an
 acceptance criterion until the PR's CI run passes.
