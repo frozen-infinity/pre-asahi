@@ -8,6 +8,7 @@ import platform
 import plistlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import zipfile
 import recovery_metadata as metadata
@@ -97,11 +98,26 @@ def inspect_mount(mount):
     tools = {}
     for tool in ['kmutil', 'bputil', 'bless', 'diskutil', 'sh']:
         matches = [p for directory in ['usr/bin', 'usr/sbin', 'bin', 'sbin']
-                   if (p := mount / directory / tool).is_file()]
+                   if (p := mount / directory / tool).is_file() and
+                   p.resolve().is_relative_to(mount.resolve())]
         metadata.require(bool(matches), 'Missing recovery tool: ' + tool)
         tools[tool] = str(matches[0].relative_to(mount))
     return {'version': version['ProductVersion'], 'build': version['ProductBuildVersion'],
             'tools_present_not_executed': tools}
+
+
+def attached_device(image):
+    query = subprocess.run(['/usr/bin/hdiutil', 'info', '-plist'], check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20)
+    images = [i for i in plistlib.loads(query.stdout).get('images', [])
+              if i.get('image-path') == str(image)]
+    metadata.require(len(images) <= 1, 'Ambiguous task-created image attachment')
+    if not images:
+        return None
+    entities = images[0].get('system-entities', [])
+    metadata.require(entities and entities[0].get('content-hint') == 'GUID_partition_scheme',
+                     'Unexpected task-created disk-image geometry')
+    return entities[0]['dev-entry']
 
 
 def validate(attempt):
@@ -114,15 +130,37 @@ def validate(attempt):
     print('Decoded recovery hash and image integrity verified', flush=True)
     mount = attempt / 'mount'
     mount.mkdir(exist_ok=False)
+    # A mounted filesystem can stall a file read; keep inspection in a child
+    # with a deadline instead of letting an unbounded Path.read_bytes hang us.
+    failure = {'status': 'RECOVERY_HASH_AND_IMAGE_VERIFY_PASS_CONTENT_INSPECTION_PENDING',
+               'encrypted_sha256': ENCRYPTED_SHA, 'decoded_sha256': DECODED_SHA,
+               'native_entry_qualified': False, 'native_boot_proven': False}
+    (attempt / 'inspection-state.json').write_text(json.dumps(failure, indent=2) + '\n')
     try:
-        attached = subprocess.run(['/usr/bin/hdiutil', 'attach', '-readonly', '-nobrowse',
-                                   '-mountpoint', str(mount), str(image)],
-                                  check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
-        try:
-            contents = inspect_mount(mount)
-        finally:
-            subprocess.run(['/usr/bin/hdiutil', 'detach', str(mount)], check=True, timeout=120)
+        subprocess.run(['/usr/bin/hdiutil', 'attach', '-readonly', '-nobrowse',
+                        '-mountpoint', str(mount), str(image)],
+                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=120)
+        code = ('import json,sys; from pathlib import Path; from recovery_payload import inspect_mount; '
+                'print(json.dumps(inspect_mount(Path(sys.argv[1]))))')
+        inspected = subprocess.run([sys.executable, '-c', code, str(mount)],
+                                   cwd=Path(__file__).resolve().parent,
+                                   check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        contents = json.loads(inspected.stdout)
+    except BaseException:
+        failure['status'] = 'RECOVERY_HASH_PASS_CONTENT_INSPECTION_FAILED'
+        (attempt / 'inspection-state.json').write_text(json.dumps(failure, indent=2) + '\n')
+        raise
     finally:
+        # Also attempt cleanup after attach errors/timeouts: attachment may have
+        # completed in the system service despite the client failing.
+        # Resolve only through hdiutil's image inventory; a stalled filesystem
+        # path must not be consulted to choose an eject target.
+        device = attached_device(image)
+        if device:
+            detached = subprocess.run(['/usr/bin/hdiutil', 'detach', device],
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+            if detached.returncode:
+                raise RuntimeError('Read-only image detach failed; inspect this scratch image before retrying')
         # Never remove mount contents; an unsuccessful detach needs manual review.
         try:
             mount.rmdir()
@@ -158,5 +196,5 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (ValueError, OSError, KeyError, zipfile.BadZipFile, subprocess.SubprocessError) as error:
+    except (ValueError, RuntimeError, OSError, KeyError, zipfile.BadZipFile, subprocess.SubprocessError) as error:
         raise SystemExit('STOP: ' + str(error))

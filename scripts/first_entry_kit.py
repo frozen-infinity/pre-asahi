@@ -145,7 +145,7 @@ def make_kit(result_path):
     own.mkdir()
     for name in ['scripts', 'ci', 'configs', 'docs', 'tests', '.github']:
         shutil.copytree(bringup.ROOT / name, own / name, ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    for name in ['AGENTS.md', 'LICENSE', 'README.md', 'sources.lock.json']:
+    for name in ['AGENTS.md', 'LICENSE', 'README.md']:
         shutil.copy2(bringup.ROOT / name, own / name)
     shutil.copy2(result_path, kit / 'stage1-build.json')
     shutil.copy2(attempt / 'installer-tests.log', kit / 'installer-tests.log')
