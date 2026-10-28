@@ -1,0 +1,90 @@
+name: First-entry kit and RAM shell
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/first-entry-kit.yml'
+      - 'scripts/first_entry_kit.py'
+      - 'scripts/stage1_proxy.py'
+      - 'scripts/ram_shell.py'
+      - 'ci/first-entry-rehearsal.py'
+      - 'configs/first-entry.json'
+      - 'tests/test_first_entry.py'
+      - 'docs/first-boot-attempt.md'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  loader-kit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests -v
+      - name: Prepare disposable runner build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang llvm lld make git
+          rustup toolchain install 1.99.0 --profile minimal --target aarch64-unknown-none-softfloat
+      - name: Build exact proxy-only candidate and rehearse real installer
+        run: |
+          python3 scripts/stage1_proxy.py --llvm-dir "$(llvm-config --bindir)"
+          python3 scripts/first_entry_kit.py --stage1-result work/stage1-proxy/attempt-*/result.json
+      - name: Publish review kit with corresponding source, never Apple payloads
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: REVIEW-ONLY-first-entry-kit
+          retention-days: 7
+          if-no-files-found: error
+          path: work/first-entry-kit/attempt-*/REVIEW-ONLY-first-entry-kit.zip
+      - name: Retain failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: first-entry-build-failure-logs
+          retention-days: 7
+          path: |
+            work/stage1-proxy/attempt-*/build.log
+            work/first-entry-kit/attempt-*/installer-tests.log
+  ram-shell:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - name: Prepare disposable runner tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends make gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user qemu-system-arm
+      - name: Retrieve pinned BusyBox source and exact saved kernel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p work
+          curl --fail --location --proto '=https' --tlsv1.2 https://www.busybox.net/downloads/busybox-1.38.0.tar.bz2 -o work/busybox-1.38.0.tar.bz2
+          gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/12719093458/zip" > work/saved-kernel.zip
+      - name: Build static AArch64 shell and test an actual guest command
+        run: |
+          python3 scripts/build_busybox.py --archive work/busybox-1.38.0.tar.bz2
+          python3 scripts/ram_shell.py --kernel-zip work/saved-kernel.zip
+          git archive --format=tar.gz -o work/pre-asahi-source.tar.gz HEAD
+      - name: Retain shell, corresponding source and evidence; exclude kernel and Apple payloads
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: QEMU-ONLY-ram-shell-and-source
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            work/ram-shell/attempt-*/ram-shell.cpio.gz
+            work/ram-shell/attempt-*/result.json
+            work/ram-shell/attempt-*/qemu-console.log
+            work/artifacts/busybox.config
+            work/artifacts/busybox-build.json
+            work/busybox-1.38.0.tar.bz2
+            work/pre-asahi-source.tar.gz

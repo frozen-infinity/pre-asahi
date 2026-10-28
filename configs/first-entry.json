@@ -1,0 +1,13 @@
+{
+  "purpose": "REVIEW_ONLY_FIRST_NATIVE_LOADER_ENTRY",
+  "installation_enabled": false,
+  "os_list": [{
+    "name": "pre-asahi Stage1 (experimental, no Linux payload)",
+    "default_os_name": "pre-asahi Stage1",
+    "expert": true,
+    "external_boot": false,
+    "supported_fw": ["26.5.1"],
+    "boot_object": "m1n1.bin",
+    "partitions": []
+  }]
+}
