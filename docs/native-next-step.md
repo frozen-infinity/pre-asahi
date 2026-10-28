@@ -1,5 +1,8 @@
 # Transition from component tests to Mac bring-up
 
+For the current first-entry findings and Mac/T7 probe, see the
+[2026-10-28 native-entry recheck](native-entry-recheck.md).
+
 The final goal is native Linux on the M4 MacBook Air. On 2026-10-27 the user
 clarified that necessary testing and running code on the Mac are within scope.
 The earlier build-only preference is no longer a blanket restriction. Work should
