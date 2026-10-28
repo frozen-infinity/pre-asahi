@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-static SYSTEM *active;
 static CONFIG_TABLE table;
 static U8 original[40];
 static LOADED loaded;
@@ -35,7 +34,7 @@ int main(void)
         .release=release,.install_table=install,.locate=locate,.handle_protocol=handle,
         .load_image=load,.start_image=start,.unload_image=unload};
     SYSTEM system={.header={.signature=0x5453595320494249ULL,.size=sizeof(SYSTEM)},.output=&console,.boot=&boot,.table_count=1,.tables=&table};
-    active=&system; (void)active; table.guid=pre_asahi_fdt_guid;
+    table.guid=pre_asahi_fdt_guid;
     for(mode=0;mode<6;mode++) {
         table.table=original; loads=starts=unloads=allocations=0;
         memset(&loaded,0,sizeof(loaded));

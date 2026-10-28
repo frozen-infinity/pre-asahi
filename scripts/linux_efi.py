@@ -170,7 +170,8 @@ def run(parent, firmware, kernel_zip, args):
     dtb = attempt / 'control.dtb'
     bringup.run([args.qemu, '-machine', 'virt,gic-version=3,dumpdtb=' + str(dtb),
                  '-accel', 'tcg', '-cpu', 'max', '-smp', '1', '-m', '1024', '-nodefaults',
-                 '-display', 'none', '-monitor', 'none', '-serial', 'none', '-nic', 'none'])
+                 '-display', 'none', '-monitor', 'none', '-serial', 'none', '-nic', 'none',
+                 '-bios', str(firmware)])
     bringup.run(['fdtput', '-t', 's', dtb, '/', 'pre-asahi,test-cookie', 'unpublished-control-tree'])
     private = attempt / 'private.dtb'
     shutil.copyfile(dtb, private)
