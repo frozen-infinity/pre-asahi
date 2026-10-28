@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the selected U-Boot's QEMU target and test real EFI protocol discovery."""
+"""Build the selected U-Boot's QEMU target and test the real EFI DT Fixup callback."""
 import argparse
 import json
 from pathlib import Path
@@ -129,7 +129,7 @@ def run(args):
               'cross_compiler': bringup.capture([args.cross_compile + 'gcc', '--version']).splitlines()[0],
               'efi_probe': compiler, 'emulation': observation,
               'apple_build_executed': False, 'j713_board_hook_executed': False,
-              'native_boot_proven': False, 'fixup_called': observation['status'] == 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS',
+              'native_boot_proven': False, 'fixup_apply_passed': observation['status'] == 'EMULATED_UBOOT_EFI_FIXUP_APPLY_PASS',
               'configuration_table_install_requested': False, 'linux_launched': False,
               'note': 'Real selected-source U-Boot EFI services on QEMU generic ARM64; Apple hardware/configuration excluded.'}
     bringup.save(attempt / 'result.json', report)
