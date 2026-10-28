@@ -10,7 +10,7 @@ The existing 16 KiB kernel and diagnostic initramfs passed the user's full-syste
 
 ## Current native-work scope
 
-The user wants to avoid risky operations. Target installation, T7 erasure, boot-policy changes and native experiments are deferred. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
+The user wants to avoid risky operations. Necessary Mac-side testing is authorized toward native Linux. Target installation, T7 erasure and boot-policy changes still require a concrete reviewed procedure; native entry and logging remain unverified. The [native-entry source/design review](docs/native-provisioning-design.md) identifies existing m1n1 idle/reset/CTRR/WFE handling, unresolved logging/provisioning questions, and an optional read-only source audit on the Arch host. No new firmware-table entry or replacement driver is justified by the source review alone.
 
 ## Implementation direction toward a working system
 
@@ -37,6 +37,16 @@ Read [the T7 plan](docs/t7-testing.md) before any hardware experiment. Current s
 Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross compiler, validate AArch64 object output, and attempt a j713 kernel build. This prepares files on the Intel laptop; no T7 formatting or Mac boot changes are needed. m1n1 Rust target setup is handled separately from the distro Rust installation.
 
 ## Your steps now
+
+The next PR calls the real selected-source U-Boot EFI DT Fixup service in QEMU.
+It checks bounded buffer negotiation, invalid input rejection, and APPLY-only
+success using a private synthetic tree. This does not exercise the J713 board
+hook or boot Linux. See [the Fixup test](docs/efi-fixup-test.md).
+
+1. Review and merge the PR after its **Selected-source U-Boot EFI probe** check passes.
+2. No download, Mac startup change or T7 preparation is needed for this check.
+3. Optional on an equipped Linux cross-build host: `python3 scripts/uboot_efi_probe.py`.
+
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.

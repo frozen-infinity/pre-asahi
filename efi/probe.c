@@ -9,7 +9,7 @@ typedef struct { U32 a; U16 b, c; U8 d[8]; } GUID;
 typedef struct { U64 signature; U32 revision, size, crc, reserved; } HEADER;
 typedef struct TEXT TEXT;
 struct TEXT { void *reset; STATUS (*output)(TEXT *, U16 *); };
-typedef struct { HEADER header; void *unused[37]; STATUS (*locate)(GUID *, void *, void **); } BOOT;
+typedef struct { HEADER header; void *unused_before_pool[5]; STATUS (*allocate)(U32, UINTN, void **); STATUS (*release)(void *); void *unused_after_pool[30]; STATUS (*locate)(GUID *, void *, void **); } BOOT;
 typedef struct {
     HEADER header;
     U16 *vendor;
