@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import platform
 import shutil
+import shlex
 import struct
 import subprocess
 import sys
@@ -26,6 +27,20 @@ def macro_contract(text):
     if not {'NO_DISPLAY', 'USE_FB'} <= names or any(name in names for name in FORBIDDEN):
         raise ValueError('Proxy-only effective configuration did not resolve')
     return {'present': ['NO_DISPLAY', 'USE_FB'], 'absent': FORBIDDEN}
+
+
+def compilation_contract(text):
+    commands = []
+    for line in text.splitlines():
+        if 'clang ' not in line or ' -c ' not in line:
+            continue
+        tokens = shlex.split(line)
+        if tokens and Path(tokens[0]).name == 'clang' and '-c' in tokens and any(t.endswith('.c') for t in tokens):
+            commands.append(tokens)
+    if (not commands or any(EXTRA_FLAGS not in command for command in commands) or
+            not all(any(source in command for command in commands) for source in ['src/main.c', 'src/display.c'])):
+        raise ValueError('Actual Aura C commands lack the required NO_DISPLAY profile')
+    return len(commands)
 
 
 def raw_contract(data, elf_header):
@@ -111,10 +126,7 @@ def build(args):
     (attempt / 'effective-macros.txt').write_text(macros + '\n')
     contract = macro_contract(macros)
     # Verify the actual C compilation log carries the flag, not just our later macro query.
-    compile_lines = [line for line in log.read_text(errors='replace').splitlines()
-                     if ' -c ' in line and 'clang ' in line and '.c ' in line]
-    if not compile_lines or any(EXTRA_FLAGS not in line for line in compile_lines):
-        raise ValueError('Actual C commands lack NO_DISPLAY')
+    compiled_units = compilation_contract(log.read_text(errors='replace'))
     raw = source / 'build/aura.bin'
     elf = source / 'build/aura-raw.elf'
     data = raw.read_bytes()
@@ -124,7 +136,7 @@ def build(args):
     boot_object_contract(data, candidate.read_bytes())
     report = {'status': 'STAGE1_PROXY_BUILD_ONLY_PASS', 'aura_commit': PIN,
               'profile': 'development proxy only; NO_DISPLAY; no chainload or appended payload',
-              'build_tag': TAG, 'effective_configuration': contract,
+              'build_tag': TAG, 'effective_configuration': contract, 'checked_c_compilation_commands': compiled_units,
               'native_entry_qualified': False, 'native_boot_proven': False,
               'target_execution_performed': False, 'installed_boot_objects_changed': False,
               'kernel_or_dtb_appended': False, 'embedded_esp_target_present': False,
