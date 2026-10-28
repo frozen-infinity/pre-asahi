@@ -50,10 +50,32 @@ def chosen_fields(data, known_ids):
     return result
 
 
+def external_flags(info):
+    if not isinstance(info, dict):
+        return {}
+    return {key: info[key] if type(info.get(key)) is bool else None
+            for key in ['Internal', 'WholeDisk', 'Whole'] if key in info}
+
+
+def external_reason(info):
+    if not isinstance(info, dict):
+        return 'invalid_info_record'
+    if info.get('Internal') is not False:
+        return 'external_location_not_confirmed'
+    keys = [key for key in ['WholeDisk', 'Whole'] if key in info]
+    if not keys or any(type(info[key]) is not bool for key in keys):
+        return 'whole_disk_flag_unavailable'
+    if len(keys) == 2 and info[keys[0]] != info[keys[1]]:
+        return 'conflicting_whole_disk_flags'
+    return None if info[keys[0]] else 'not_a_whole_disk'
+
+
 def external_summary(info, index):
+    # diskutil info uses WholeDisk. Retain strict support for legacy Whole fixtures.
     # Never print arbitrary media/volume labels, device identifiers, UUIDs or serials.
-    if not isinstance(info, dict) or info.get('Internal') is not False or info.get('Whole') is not True:
-        raise ValueError('Expected an external whole device')
+    reason = external_reason(info)
+    if reason:
+        raise ValueError(reason)
     names = [info.get(k) for k in ['MediaName', 'DeviceModel', 'IORegistryEntryName']]
     t7 = any(isinstance(v, str) and re.search(r'\bT7\b', v, re.I) for v in names)
     size = info.get('TotalSize')
@@ -81,25 +103,33 @@ def collect(run_query=query):
     except ValueError:
         fields, chosen_status = None, 'unavailable'
     external = []
+    diagnostics = []
+    listed_count = None
     if isinstance(disks, dict) and isinstance(disks.get('AllDisksAndPartitions'), list):
         rows = disks['AllDisksAndPartitions']
+        listed_count = len(rows)
         if len(rows) > 8:
             disks_status = 'too_many_devices'
         else:
             seen = set()
-            for row in rows:
+            for index, row in enumerate(rows, 1):
                 identifier = safe_text(row.get('DeviceIdentifier') if isinstance(row, dict) else None, r'disk[0-9]+')
                 if not identifier or identifier in seen:
-                    disks_status = 'unavailable'; continue
+                    disks_status = 'unavailable'
+                    diagnostics.append({'external_index': index, 'reason': 'invalid_or_duplicate_identifier'})
+                    continue
                 seen.add(identifier)
                 info, status = run_query(['/usr/sbin/diskutil', 'info', '-plist', identifier], True)
                 if status != 'ok':
                     disks_status = 'partial'
+                    diagnostics.append({'external_index': index, 'reason': 'info_query_unavailable'})
                     continue
                 try:
-                    external.append(external_summary(info, len(external) + 1))
+                    external.append(external_summary(info, index))
                 except ValueError:
                     disks_status = 'partial'
+                    diagnostics.append({'external_index': index, 'reason': external_reason(info),
+                                        'reported_flags': external_flags(info)})
     elif disks_status == 'ok':
         disks_status = 'unavailable'
     internal = root.get('Internal') if isinstance(root, dict) else None
@@ -112,6 +142,8 @@ def collect(run_query=query):
             'macos_build': safe_text(build, r'[0-9A-Za-z]{3,20}'),
             'currently_running_os_boot_context': fields, 'root_storage_internal': internal,
             'external_physical_devices': external,
+            'external_storage_observation': {'listed_device_count': listed_count,
+                'described_device_count': len(external), 'diagnostics': diagnostics},
             'query_status': {'model': model_status, 'version': version_status, 'build': build_status,
                              'chosen': chosen_status, 'root_storage': root_status, 'external_storage': disks_status},
             'aura_firmware_table_revision': refs['aura']['commit'],

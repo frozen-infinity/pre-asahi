@@ -95,31 +95,47 @@ raw registry bytes or raw diagnostics. It writes no report. Query failures remai
 explicitly unavailable, rather than implying no devices or a safe boot path.
 Reporting indexes are never valid targets for future disk commands.
 
-## Validation and user steps
+## Probe correction and validation
 
-All **48** project/host tests passed locally, including privacy, malformed input,
-missing-query, disk-selection and changed-pin cases. A real read-only run on the
-Mac completed all queries. The actual target firmware strings and storage report
-were reviewed privately and are not committed. No startup or storage state was
-changed. CI tests use substitutes; they do not query a Mac or qualify native boot.
+The original external-device parser expected a `Whole` key. macOS `diskutil info
+-plist` supplies `WholeDisk`; this caused a physically listed whole disk to be
+omitted with `external_storage: partial`. A failing regression reproduced that
+case before the fix. The parser now uses `WholeDisk`, retaining strict support
+for the legacy `Whole` fixture form. Conflicting, missing, non-boolean or false
+whole-device flags remain rejected; the internal-device exclusion is unchanged.
 
-After review and merge, if the T7 was not attached for the previous observation:
+The report now includes `external_storage_observation` with separate listed and
+described counts plus allowlisted reason codes for skipped records. A failed
+list query has a null listed count, not zero. Partial reports do not mean an
+external disk is absent. Indexes retain their list positions even when another
+record fails; they still must never be used as disk-command targets. Only the
+three fixed location/whole-device boolean keys may appear in schema diagnostics;
+arbitrary labels, identifiers and raw diagnostics remain excluded.
 
-1. Connect the T7 in macOS, without erasing or formatting it.
-2. In your pre-asahi clone, retain any local changes, update to the merged main,
-   then run:
+All **51** project/host tests passed locally, including a regression that failed
+before this fix, conflicting-schema refusal, partial-query reporting and privacy.
+The corrected probe completed all queries on the real Mac and recognized the
+attached 1 TB USB T7. The private output was reviewed in chat and is not committed.
+No startup or storage state was changed. CI uses substitutes and does not query a
+Mac or qualify native boot.
+
+## Your steps
+
+Review and merge the parser-fix PR after **Native-entry probe checks** passes.
+No repeat probe is currently needed: the real Mac/T7 check succeeded. For a later
+read-only recheck in an updated pre-asahi clone on the Mac:
 
 ```sh
 python3 scripts/macos_boot_context.py
 ```
 
-3. Share only that filtered JSON in chat. If queries are unavailable, run it from
-   a normal local macOS Terminal without sudo; do not substitute a full raw dump.
-   No reboot, Recovery visit, installer download or repeated kernel build is
-   requested.
+Share only that filtered JSON if needed for troubleshooting. If queries are
+unavailable, run from a normal local macOS Terminal without sudo; do not substitute
+a full raw dump. No formatting, reboot, Recovery visit, installer download or
+repeated kernel build is requested.
 
 This closes an identification gap and records a credible downstream entry lead.
-It does **not** finish first-entry qualification. The next development work is to
-review/adapt that exact J713 boot-identity and observable Stage-1 route for the
-user's firmware and T7 preference, with its concrete writes and recovery path
-made reviewable before any such action is requested.
+It does **not** finish first-entry qualification. Next development work remains
+reviewing/adapting the exact J713 boot-identity and observable Stage-1 route for
+the user's firmware and T7 preference, with concrete writes and recovery made
+reviewable before any such action is requested.
