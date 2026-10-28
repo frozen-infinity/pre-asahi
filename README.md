@@ -38,15 +38,16 @@ Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross co
 
 ## Your steps now
 
-The APPLY-only EFI Fixup test passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40657157665).
-The next PR adds temporary EFI device-tree publication, a separately compiled
-consumer in the same app, and verified restoration before buffer cleanup. Both
-APPLY and publication must pass in QEMU. This does not launch Linux or run the
-J713 board hook. See [the publication test](docs/efi-publication-test.md).
+EFI Fixup and temporary table publication passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40658293937).
+The next PR launches the exact saved kernel through real EFI LoadImage/StartImage
+in QEMU. A RAM-only PID 1 must read a fresh cookie from the published tree; a
+control that skips publication must reach PID 1 and reject the original tree.
+See [the Linux EFI consumer test](docs/linux-efi-consumer.md). This remains
+emulation; native M4 boot is unproven.
 
-1. Review and merge the PR after its **Selected-source U-Boot EFI probe** check passes.
-2. No download, Mac startup change or T7 preparation is needed for this check.
-3. Optional on an equipped Linux cross-build host: `python3 scripts/uboot_efi_probe.py`.
+1. Review the PR after **Linux EFI consumer on QEMU** and **Selected-source U-Boot EFI probe** pass; mark ready and merge when satisfied.
+2. No new download, Mac startup change or T7 preparation is needed.
+3. Optional Linux-host reproduction: `python3 scripts/uboot_efi_probe.py --linux-kernel-zip /path/to/saved-kernel.zip`.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.

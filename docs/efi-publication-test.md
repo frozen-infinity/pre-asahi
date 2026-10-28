@@ -1,5 +1,8 @@
 # EFI device-tree publication and consumer check
 
+This milestone passed in [CI](https://github.com/frozen-infinity/pre-asahi/actions/runs/40658293937).
+The subsequent [Linux EFI consumer test](linux-efi-consumer.md) adds a real kernel handoff.
+
 The APPLY-only milestone passed in [PR #23's CI run](https://github.com/frozen-infinity/pre-asahi/actions/runs/40657157665).
 This next check tests the configuration-table step that a future EFI Linux
 handoff would need. It remains a generic ARM64 QEMU test.
