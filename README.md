@@ -48,19 +48,18 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The Mac/T7 identification check and the separate [proxy-only Stage 1
-build](docs/first-native-stage.md) pass. The next dependency is its paired
-recovery and a separate OS identity. A new [actual Apple archive metadata
-check](docs/paired-recovery.md) confirms the J713/board/chip identity and 26.5.1 /
-25F80 recovery member using about 1.5 MB of ranged metadata reads. It does not
-validate or install the recovery payload, or qualify the newer macOS host.
+The remaining preparation is now grouped into the [first-boot preparation
+milestone](docs/first-boot-attempt.md): actual recovery payload validation, a
+loader/source review kit, a real empty-OS installer rehearsal, and a RAM-only
+interactive shell test. The saved kernel is reused, not rebuilt.
 
-1. Review the PR after **Apple paired-recovery metadata** passes, then merge when satisfied.
-2. No new downloads, Mac probes, Recovery visits, T7 changes or kernel rebuilds are needed.
-3. Next technical work is validation of the actual paired recovery image before developing a complete stub-only enrollment profile.
+1. Review **First-entry kit and RAM shell** and its clearly labeled artifacts.
+2. Merge when satisfied; do not install the review-only kit or QEMU-only shell.
+3. Current APFS limits prevent the proposed internal stub shrink. No T7 erase, startup-policy change or Recovery visit is requested.
 
-No boot-object installation or startup-setting change is requested. Necessary
-Mac-side testing remains authorized as entry and recovery become concrete.
+The first intended native observation is Aura's visible console/proxy, followed
+by return to macOS. A native Linux shell still needs qualified entry, runtime
+handoff and input. Necessary Mac-side preparation remains authorized.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.

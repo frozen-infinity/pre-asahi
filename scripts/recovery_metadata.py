@@ -25,8 +25,12 @@ def require(condition, message):
 
 class RangeArchive(io.RawIOBase):
     """No whole-file fallback; bind requests to one strong HTTP entity tag."""
-    def __init__(self, opener=urllib.request.urlopen):
+    def __init__(self, opener=urllib.request.urlopen, transfer_limit=LIMIT, request_limit=100):
         self.opener = opener
+        require(0 < transfer_limit <= 2 * 1024**3 and 0 < request_limit <= 1024,
+                'Invalid bounded transfer limits')
+        self.transfer_limit = transfer_limit
+        self.request_limit = request_limit
         self.position = 0
         self.transferred = 0
         self.requests = 0
@@ -55,7 +59,7 @@ class RangeArchive(io.RawIOBase):
 
     def read(self, size=-1):
         size = self.size - self.position if size < 0 else min(size, self.size - self.position)
-        require(size <= LIMIT - self.transferred and self.requests < 100,
+        require(size <= self.transfer_limit - self.transferred and self.requests < self.request_limit,
                 'Metadata transfer budget exceeded')
         if not size:
             return b''
