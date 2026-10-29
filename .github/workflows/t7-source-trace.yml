@@ -1,0 +1,49 @@
+name: T7 external-stub source trace
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/t7-source-trace.yml'
+      - 'scripts/t7_plan.py'
+      - 'ci/t7-installer-rehearsal.py'
+      - 'configs/t7-first-entry.json'
+      - 'tests/test_t7_plan.py'
+      - 'docs/t7-external-stub.md'
+
+permissions:
+  contents: read
+
+jobs:
+  source-trace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s tests -v
+      - name: Fetch exact installer/J713 patch, run its tests, trace fake external disk services
+        run: |
+          python3 - <<'PY'
+          import pathlib, subprocess, sys
+          sys.path.insert(0, 'scripts')
+          import first_entry_kit
+          root = pathlib.Path('work/t7-source-trace').resolve()
+          root.mkdir(parents=True)
+          source = first_entry_kit.fetch_source(root)
+          # The local Mac rehearsal used the actual reviewed Aura output.
+          # CI here exercises source dispatch only; it deliberately uses fixture bytes.
+          raw = root / 'SYNTHETIC-NOT-EXECUTABLE.bin'
+          raw.write_bytes(b'synthetic source-trace fixture'.ljust(4088, b'\0') + b'STACKBOT')
+          subprocess.run([sys.executable, 'ci/t7-installer-rehearsal.py', str(source), str(raw),
+                          'configs/t7-first-entry.json', str(root / 'trace')], check=True)
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: SYNTHETIC-T7-source-trace-only
+          path: |
+            work/t7-source-trace/trace/result.json
+            work/t7-source-trace/installer-tests.log
+          retention-days: 7
+          if-no-files-found: error

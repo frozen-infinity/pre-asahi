@@ -48,18 +48,20 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The remaining preparation is now grouped into the [first-boot preparation
-milestone](docs/first-boot-attempt.md): actual recovery payload validation, a
-loader/source review kit, a real empty-OS installer rehearsal, and a RAM-only
-interactive shell test. The saved kernel is reused, not rebuilt.
+The connected T7 is already GPT/APFS. The [external-stub source/layout
+proposal](docs/t7-external-stub.md) now exercises the pinned installer's external
+path with synthetic disk services. It could avoid an internal container shrink,
+but still requires internal boot metadata and per-OS authorization. Native
+external boot and recovery remain unqualified.
 
-1. Review **First-entry kit and RAM shell** and its clearly labeled artifacts.
-2. Merge when satisfied; do not install the review-only kit or QEMU-only shell.
-3. Current APFS limits prevent the proposed internal stub shrink. No T7 erase, startup-policy change or Recovery visit is requested.
+1. Review **T7 external-stub source trace**, then merge the PR when satisfied.
+2. Leave the T7 in its current format; do not run an installer or Recovery command.
+3. The first proposed external layout is one roughly 2.5 GB APFS stub with the rest unallocated. FAT32/ext4 partitions are not needed for the loader-console milestone.
 
-The first intended native observation is Aura's visible console/proxy, followed
-by return to macOS. A native Linux shell still needs qualified entry, runtime
-handoff and input. Necessary Mac-side preparation remains authorized.
+The [consolidated first-boot preparation](docs/first-boot-attempt.md) provides the
+review-only loader/source kit and QEMU-tested RAM shell. Kernel rebuilding and
+forced internal shrinking are not the next prerequisites. Paired Recovery,
+external enrollment, visible output and return to macOS remain to be validated.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.

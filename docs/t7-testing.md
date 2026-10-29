@@ -1,5 +1,10 @@
 # Testing with a separate Samsung T7
 
+Current 2026-10-29 proposal: [external stub source/layout review](t7-external-stub.md).
+The T7 is already GPT/APFS; leave it unchanged. The first proposed loader test
+needs no Linux/EFI partition. The external route remains unqualified and may
+still write internal boot metadata. Earlier phase/rootfs guidance follows.
+
 ## Intended storage layout
 
 | Component | Phase 1 | Later, after support is proven |
