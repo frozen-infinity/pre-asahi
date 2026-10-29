@@ -1,0 +1,13 @@
+{
+  "purpose": "EXPERIMENTAL_EXTERNAL_STUB_REHEARSAL_ONLY",
+  "installation_enabled": false,
+  "os_list": [{
+    "name": "pre-asahi T7 Stage1 (unqualified external experiment)",
+    "default_os_name": "pre-asahi T7 Stage1",
+    "expert": true,
+    "external_boot": true,
+    "supported_fw": ["26.5.1"],
+    "boot_object": "m1n1.bin",
+    "partitions": []
+  }]
+}
