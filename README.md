@@ -48,20 +48,20 @@ our earlier "historical research only" description was stale. Its documented
 installer uses the internal SSD and specific paired firmware. This does not
 qualify our stack or a T7-only entry route.
 
-The connected T7 is already GPT/APFS. The [external-stub source/layout
-proposal](docs/t7-external-stub.md) now exercises the pinned installer's external
-path with synthetic disk services. It could avoid an internal container shrink,
-but still requires internal boot metadata and per-OS authorization. Native
-external boot and recovery remain unqualified.
+The [read-only second-Mac recovery check](docs/second-mac-check.md) is now
+prepared as a portable folder. The exact decoded Apple image is included only
+in local ignored transfer storage, not in GitHub or CI. The checker verifies the
+image before a bounded read-only mount and requires confirmed image ejection.
 
-1. Review **T7 external-stub source trace**, then merge the PR when satisfied.
-2. Leave the T7 in its current format; do not run an installer or Recovery command.
-3. The first proposed external layout is one roughly 2.5 GB APFS stub with the rest unallocated. FAT32/ext4 partitions are not needed for the loader-console milestone.
+1. Review **Portable recovery-check tests**, then merge the PR when satisfied.
+2. Copy the prepared `recovery-check-for-second-mac` folder to the borrowed Mac's local storage. The existing T7 filesystem can carry it without formatting.
+3. In that copied folder, run `python3 inspect_recovery.py`, then `python3 inspect_recovery.py --inspect` on the borrowed Mac and share the generated JSON report. Python 3.9+ must already work; no dependencies are installed.
 
-The [consolidated first-boot preparation](docs/first-boot-attempt.md) provides the
-review-only loader/source kit and QEMU-tested RAM shell. Kernel rebuilding and
-forced internal shrinking are not the next prerequisites. Paired Recovery,
-external enrollment, visible output and return to macOS remain to be validated.
+Do not repeat the mount on the M4, run an installer, format the T7 or change
+startup security. A content-inspection pass would not yet qualify external
+boot/enrollment. The [T7 external-stub proposal](docs/t7-external-stub.md) remains
+installation-disabled; the [first-entry kit and RAM shell](docs/first-boot-attempt.md)
+remain preparation artifacts.
 
 The saved Aura, kernel and U-Boot archives have now passed a combined local
 integrity/source/emulation-evidence check: **145 recorded build outputs matched**.
