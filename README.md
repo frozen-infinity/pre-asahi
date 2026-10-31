@@ -36,6 +36,10 @@ Use the separate T7 for test files and, once supported, the experimental root fi
 
 Read [the T7 plan](docs/t7-testing.md) before any hardware experiment. Current scripts never format disks, install boot components, or modify startup security. A T7 root filesystem can limit later rootfs writes to external media; it does not isolate firmware, boot policy, drivers, or hardware from experimental code.
 
+## m1n1 with Arch-managed Rust
+
+After the j713 kernel artifacts are built, follow [the m1n1 Rust source-build guide](docs/m1n1-arch-rust.md). It uses the pinned upstream BUILDSTD option with matching Arch rust-src, without replacing distro Rust. This is build preparation only; no boot or disk changes are included.
+
 ## Intel Arch development host
 
 Use the [Arch build-host guide](docs/arch-build-host.md) to install the cross compiler, validate AArch64 object output, and attempt a j713 kernel build. This prepares files on the Intel laptop; no T7 formatting or Mac boot changes are needed. m1n1 Rust target setup is handled separately from the distro Rust installation.
